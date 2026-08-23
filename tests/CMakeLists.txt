@@ -13,6 +13,9 @@ set(PTI_TESTS
     test_equivalence   integration
     test_edge_cases    unit
     test_ttm_ops       unit
+    test_spmatrix      unit
+    test_cpd           integration
+    test_hicoo_variants integration
 )
 
 list(LENGTH PTI_TESTS _n)
