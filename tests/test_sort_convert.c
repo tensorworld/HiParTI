@@ -96,6 +96,22 @@ static void test_renumber_bijection(const char *path)
         CHECK(bij, "renumbering of mode %u is not a bijection", m);
         free(seen);
     }
+    /* impl_num 2 (row-block sort path) must also produce a bijection */
+    for(ptiIndex m = 0; m < X.nmodes; ++m)
+        for(ptiIndex i = 0; i < X.ndims[m]; ++i) map_inds[m][i] = i;
+    ptiIndexRenumber(&X, map_inds, 1, 3, 5, 1, 2 /* impl_num */);
+    for(ptiIndex m = 0; m < X.nmodes; ++m) {
+        char *seen = (char *) calloc(X.ndims[m], 1);
+        int bij = 1;
+        for(ptiIndex i = 0; i < X.ndims[m]; ++i) {
+            ptiIndex const t = map_inds[m][i];
+            if(t >= X.ndims[m] || seen[t]) { bij = 0; break; }
+            seen[t] = 1;
+        }
+        CHECK(bij, "impl_num-2 renumbering of mode %u is not a bijection", m);
+        free(seen);
+    }
+
     for(ptiIndex m = 0; m < X.nmodes; ++m) free(map_inds[m]);
     free(map_inds);
     ptiFreeSparseTensor(&X);

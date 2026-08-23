@@ -78,6 +78,15 @@ static double run_cpd_seq(const ptiSparseTensor *X, ptiIndex R, const char *what
         CHECK(worst <= 2.0 * scale + 1e-9,
               "%s: reconstruction wildly off (max err %g, scale %g)", what, worst, scale);
     }
+    /* the Kruskal dump routine must run and produce output */
+    if(rc == 0) {
+        FILE *f = tmpfile();
+        if(f) {
+            CHECK(ptiDumpKruskalTensor(&kt, f) == 0, "%s: DumpKruskalTensor failed", what);
+            CHECK(ftell(f) > 0, "%s: DumpKruskalTensor wrote nothing", what);
+            fclose(f);
+        }
+    }
     ptiFreeKruskalTensor(&kt);
     return fit;
 }
@@ -147,6 +156,16 @@ static void test_hicoo_cpd(void)
             CHECK(kt.fit > 0.999, "HiCOO cpd fit %g, expected > 0.999 on exactly rank-3", kt.fit);
         }
         ptiFreeRankKruskalTensor(&kt);
+
+#ifdef HIPARTI_USE_OPENMP
+        ptiRankKruskalTensor kto;
+        ptiNewRankKruskalTensor(&kto, X.nmodes, X.ndims, (ptiElementIndex) R);
+        rc = ptiOmpCpdAlsHiCOO(&H, R, 500, 1e-12, 4, 1, 0, &kto);
+        CHECK(rc == 0, "ptiOmpCpdAlsHiCOO failed rc=%d", rc);
+        if(rc == 0)
+            CHECK(kto.fit > 0.999, "HiCOO omp cpd fit %g, expected > 0.999", kto.fit);
+        ptiFreeRankKruskalTensor(&kto);
+#endif
         ptiFreeSparseTensorHiCOO(&H);
     } else {
         CHECK(0, "COO->HiCOO failed for the CPD test tensor");

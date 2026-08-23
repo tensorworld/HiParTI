@@ -124,6 +124,20 @@ static void coo_equivalence(const char *path, ptiIndex R)
             }
             for(int i = 0; i < threads[t]; ++i) { ptiFreeMatrix(copy_U[i]); free(copy_U[i]); }
             free(copy_U);
+
+            /* lock-pool variant */
+            ptiMutexPool *pool = ptiMutexAlloc();
+            if(pool) {
+                ptiConstantMatrix(f.U[f.nmodes], 0);
+                if(ptiOmpMTTKRP_Lock(&X, f.U, f.order, mode, threads[t], pool) == 0) {
+                    ptiValue *v = snapshot(f.U[f.nmodes], nrows);
+                    snprintf(what, sizeof what, "omp_lock(tk=%d) vs seq (%s mode %u R=%u)",
+                             threads[t], path, mode, R);
+                    agree(v, vseq, nrows, R, what);
+                    free(v);
+                }
+                ptiMutexFree(pool);
+            }
         }
 #endif
         free(vseq); free(vref);

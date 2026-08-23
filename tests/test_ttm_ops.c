@@ -144,6 +144,87 @@ static void test_scalar_ops(const char *path)
     ptiFreeSparseTensor(&X);
 }
 
+
+/* semi-sparse conversion round-trip: COO -> semi-sparse -> COO preserves the
+ * tensor (this exercises ssptensor/{fromsp,sort,merge,fromssp}.c - the sort is
+ * where the sizeof heap overflow lived). Then TTM computed through the
+ * semi-sparse form and through OpenMP must agree with the sequential result. */
+static void test_semisparse(const char *path, ptiIndex R)
+{
+    ptiSparseTensor X;
+    if(pti_test_load(&X, path) != 0) { ++pti_test_failures; return; }
+    char what[160];
+
+    for(ptiIndex mode = 0; mode < X.nmodes; ++mode) {
+        /* round-trip */
+        ptiSemiSparseTensor S;
+        snprintf(what, sizeof what, "ToSemiSparse (%s mode %u)", path, mode);
+        int rc = ptiSparseTensorToSemiSparseTensor(&S, &X, mode);
+        CHECK(rc == 0, "%s failed", what);
+        if(rc == 0) {
+            ptiSparseTensor B;
+            snprintf(what, sizeof what, "SemiToSparse (%s mode %u)", path, mode);
+            rc = ptiSemiSparseTensorToSparseTensor(&B, &S, (ptiValue) 1e-9);
+            CHECK(rc == 0, "%s failed", what);
+            if(rc == 0) {
+                CHECK(B.nnz == X.nnz, "%s: nnz %llu != %llu", what,
+                      (unsigned long long) B.nnz, (unsigned long long) X.nnz);
+                double sx = 0, sb = 0;
+                for(ptiNnzIndex z = 0; z < X.nnz; ++z) sx += (double) X.values.data[z];
+                for(ptiNnzIndex z = 0; z < B.nnz; ++z) sb += (double) B.values.data[z];
+                CHECK(fabs(sb - sx) <= 1e-5 * fabs(sx),
+                      "%s: value sum %g != %g", what, sb, sx);
+                ptiFreeSparseTensor(&B);
+            }
+
+            /* TTM through the semi-sparse form must match the sparse-input TTM */
+            ptiMatrix U;
+            ptiNewMatrix(&U, X.ndims[mode], R);
+            ptiRandomizeMatrix(&U);
+            ptiSemiSparseTensor Y1, Y2;
+            int rc1 = ptiSparseTensorMulMatrix(&Y1, &X, &U, mode);
+            int rc2 = ptiSemiSparseTensorMulMatrix(&Y2, &S, &U, mode);
+            snprintf(what, sizeof what, "SemiSparse TTM (%s mode %u R=%u)", path, mode, R);
+            CHECK(rc1 == 0 && rc2 == 0, "%s failed (%d, %d)", what, rc1, rc2);
+            if(rc1 == 0 && rc2 == 0) {
+                CHECK(Y1.nnz == Y2.nnz, "%s: nnz differ", what);
+                double s1 = 0, s2 = 0;
+                for(ptiNnzIndex z = 0; z < Y1.nnz; ++z)
+                    for(ptiIndex r = 0; r < R; ++r) s1 += (double) Y1.values.values[z * Y1.stride + r];
+                for(ptiNnzIndex z = 0; z < Y2.nnz; ++z)
+                    for(ptiIndex r = 0; r < R; ++r) s2 += (double) Y2.values.values[z * Y2.stride + r];
+                CHECK(fabs(s1 - s2) <= 1e-4 * (fabs(s1) > 1 ? fabs(s1) : 1.0),
+                      "%s: sums differ %g vs %g", what, s1, s2);
+            }
+            if(rc1 == 0) ptiFreeSemiSparseTensor(&Y1);
+            if(rc2 == 0) ptiFreeSemiSparseTensor(&Y2);
+
+#ifdef HIPARTI_USE_OPENMP
+            /* OpenMP TTM against sequential */
+            ptiSemiSparseTensor Y3;
+            snprintf(what, sizeof what, "Omp TTM (%s mode %u R=%u)", path, mode, R);
+            if(ptiOmpSparseTensorMulMatrix(&Y3, &X, &U, mode) == 0) {
+                ptiSemiSparseTensor Yref;
+                if(ptiSparseTensorMulMatrix(&Yref, &X, &U, mode) == 0) {
+                    double s3 = 0, sr = 0;
+                    for(ptiNnzIndex z = 0; z < Y3.nnz; ++z)
+                        for(ptiIndex r = 0; r < R; ++r) s3 += (double) Y3.values.values[z * Y3.stride + r];
+                    for(ptiNnzIndex z = 0; z < Yref.nnz; ++z)
+                        for(ptiIndex r = 0; r < R; ++r) sr += (double) Yref.values.values[z * Yref.stride + r];
+                    CHECK(fabs(s3 - sr) <= 1e-4 * (fabs(sr) > 1 ? fabs(sr) : 1.0),
+                          "%s: omp %g vs seq %g", what, s3, sr);
+                    ptiFreeSemiSparseTensor(&Yref);
+                }
+                ptiFreeSemiSparseTensor(&Y3);
+            }
+#endif
+            ptiFreeMatrix(&U);
+            ptiFreeSemiSparseTensor(&S);
+        }
+    }
+    ptiFreeSparseTensor(&X);
+}
+
 int main(int argc, char **argv)
 {
     DATA_DIR = (argc > 1) ? argv[1] : "data";
@@ -158,5 +239,9 @@ int main(int argc, char **argv)
     test_kronecker_khatrirao(p);
     snprintf(p, sizeof p, "%s/tensors/4d_3_16.tns", DATA_DIR);
     test_scalar_ops(p);
+    snprintf(p, sizeof p, "%s/tensors/3d_7.tns", DATA_DIR);
+    test_semisparse(p, 4);
+    snprintf(p, sizeof p, "%s/tensors/3d-24.tns", DATA_DIR);
+    test_semisparse(p, 8);
     return TEST_SUMMARY();
 }

@@ -217,6 +217,29 @@ static void test_autodetect(void)
     remove(p);
 }
 
+
+/* the error-reporting API: provoke a shape error and read it back */
+static void test_error_api(void)
+{
+    ptiSparseTensor A, B, Z;
+    ptiIndex da[2] = { 3, 3 }, db[2] = { 4, 4 };
+    ptiNewSparseTensor(&A, 2, da);
+    ptiNewSparseTensor(&B, 2, db);
+    ptiClearLastError();
+    CHECK(ptiSparseTensorDotMul(&Z, &A, &B) != 0, "shape mismatch was accepted");
+    const char *module = NULL, *file = NULL, *reason = NULL;
+    unsigned line = 0;
+    /* pti_CheckError records the error only in HIPARTI_DEBUG builds, so the
+       code may legitimately be 0 here in a release build; the API calls
+       themselves must still work and Clear must always leave it at 0. */
+    (void) ptiGetLastError(&module, &file, &line, &reason);
+    ptiClearLastError();
+    int code = ptiGetLastError(&module, &file, &line, &reason);
+    CHECK(code == 0, "ptiClearLastError did not clear the error");
+    ptiFreeSparseTensor(&A);
+    ptiFreeSparseTensor(&B);
+}
+
 int main(int argc, char **argv)
 {
     DATA_DIR = (argc > 1) ? argv[1] : "data";
@@ -228,5 +251,6 @@ int main(int argc, char **argv)
     test_tensorsuite_block_rejected();
     test_tensorsuite_metadata_base();
     test_autodetect();
+    test_error_api();
     return TEST_SUMMARY();
 }

@@ -16,6 +16,7 @@ set(PTI_TESTS
     test_spmatrix      unit
     test_cpd           integration
     test_hicoo_variants integration
+    test_tensor_algebra unit
 )
 
 list(LENGTH PTI_TESTS _n)

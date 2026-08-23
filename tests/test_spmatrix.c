@@ -251,6 +251,44 @@ static void test_relabel(const char *name)
     ptiFreeSparseMatrix(&A);
 }
 
+
+/* reporting routines across all matrix formats: must run and produce output */
+static void test_matrix_reports(const char *name)
+{
+    ptiSparseMatrix A;
+    if(load_mtx(&A, name) != 0) { ++pti_test_failures; return; }
+    FILE *f = tmpfile();
+    CHECK(f != NULL, "tmpfile failed");
+    if(!f) { ptiFreeSparseMatrix(&A); return; }
+    long pos = 0;
+
+    ptiSparseMatrixStatus(&A, f);
+    CHECK(ftell(f) > pos, "SparseMatrixStatus wrote nothing"); pos = ftell(f);
+    CHECK(ptiDumpSparseMatrix(&A, 1, f) == 0, "DumpSparseMatrix failed");
+    CHECK(ftell(f) > pos, "DumpSparseMatrix wrote nothing"); pos = ftell(f);
+
+    ptiSparseMatrixCSR csr;
+    if(ptiSparseMatrixToCSR(&csr, &A) == 0) {
+        ptiSparseMatrixStatusCSR(&csr, f);
+        CHECK(ftell(f) > pos, "StatusCSR wrote nothing"); pos = ftell(f);
+        CHECK(ptiDumpSparseMatrixCSR(&csr, f) == 0, "DumpCSR failed");
+        CHECK(ftell(f) > pos, "DumpCSR wrote nothing"); pos = ftell(f);
+        ptiFreeSparseMatrixCSR(&csr);
+    }
+
+    ptiSparseMatrixHiCOO H;
+    ptiNnzIndex max_nnzb = 0;
+    if(ptiSparseMatrixToHiCOO(&H, &max_nnzb, &A, 7, 10) == 0) {
+        ptiSparseMatrixStatusHiCOO(&H, f);
+        CHECK(ftell(f) > pos, "StatusHiCOO wrote nothing"); pos = ftell(f);
+        CHECK(ptiDumpSparseMatrixHiCOO(&H, f) == 0, "DumpHiCOO failed");
+        CHECK(ftell(f) > pos, "DumpHiCOO wrote nothing");
+        ptiFreeSparseMatrixHiCOO(&H);
+    }
+    fclose(f);
+    ptiFreeSparseMatrix(&A);
+}
+
 int main(int argc, char **argv)
 {
     DATA_DIR = (argc > 1) ? argv[1] : "data";
@@ -260,6 +298,7 @@ int main(int argc, char **argv)
         test_spmm_all(mats[i], 8);
         test_spmm_all(mats[i], 9);   /* stride != R */
         test_relabel(mats[i]);
+        test_matrix_reports(mats[i]);
     }
     return TEST_SUMMARY();
 }
