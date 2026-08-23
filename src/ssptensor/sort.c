@@ -74,8 +74,8 @@ static void pti_SwapValues(ptiSemiSparseTensor *tsr, ptiNnzIndex ind1, ptiNnzInd
         }
     }
     if(ind1 != ind2) {
-        memcpy(buffer, &tsr->values.values[ind1*tsr->stride], tsr->stride * sizeof (ptiNnzIndex));
-        memcpy(&tsr->values.values[ind1*tsr->stride], &tsr->values.values[ind2*tsr->stride], tsr->stride * sizeof (ptiNnzIndex));
-        memcpy(&tsr->values.values[ind2*tsr->stride], buffer, tsr->stride * sizeof (ptiNnzIndex));
+        memcpy(buffer, &tsr->values.values[ind1*tsr->stride], tsr->stride * sizeof (ptiValue));
+        memcpy(&tsr->values.values[ind1*tsr->stride], &tsr->values.values[ind2*tsr->stride], tsr->stride * sizeof (ptiValue));
+        memcpy(&tsr->values.values[ind2*tsr->stride], buffer, tsr->stride * sizeof (ptiValue));
     }
 }

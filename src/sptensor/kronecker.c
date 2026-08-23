@@ -45,7 +45,6 @@ int ptiSparseTensorKroneckerMul(ptiSparseTensor *Y, const ptiSparseTensor *A, co
     result = ptiNewSparseTensor(Y, nmodes, inds);
     pti_CheckError(result, "SpTns Kronecker", NULL);
     free(inds);
-    pti_CheckError(PTIERR_SHAPE_MISMATCH, "SpTns Kronecker", "shape mismatch");
     /* For each element in A and B */
     for(i = 0; i < A->nnz; ++i) {
         for(j = 0; j < B->nnz; ++j) {

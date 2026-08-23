@@ -425,6 +425,10 @@ static void ptiLexiOrderPerMode(ptiSparseTensor * tsr, ptiIndex mode, ptiIndex *
             ++ i;
         }
     }
+    if (impl_num != 1 && impl_num != 2 && impl_num != 3) {
+        fprintf(stderr, "[Lexi-order] warning: unsupported impl_num %d, falling back to 1.\n", impl_num);
+        impl_num = 1;
+    }
     if (impl_num == 1) {
         ptiSparseTensorSortIndexExceptSingleMode(tsr, 1, mode_order, tk);
     } else if (impl_num == 2) {
@@ -458,7 +462,7 @@ static void ptiLexiOrderPerMode(ptiSparseTensor * tsr, ptiIndex mode, ptiIndex *
     t0 = u_seconds();
     for (z = 1; z < nnz; z++)
     {
-        int cmp_res;
+        int cmp_res = 0;
         if (impl_num == 1) {
             cmp_res = pti_SparseTensorCompareIndicesExceptSingleMode(tsr, z, tsr, z-1, mode_order);
             // cmp_res = pti_SparseTensorCompareIndicesExceptSingleModeCantor(tsr, z, tsr, z-1, mode_order);
