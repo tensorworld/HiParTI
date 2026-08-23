@@ -59,3 +59,17 @@ if(USE_CUDA)
         SKIP_RETURN_CODE 77
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
+
+# Python interface test: standard library only (ctypes), so it just needs
+# an interpreter.  HIPARTI_LIB points it at the freshly built library.
+find_package(Python3 COMPONENTS Interpreter QUIET)
+if(Python3_Interpreter_FOUND AND BUILD_SHARED)
+    add_test(NAME test_python
+             COMMAND ${Python3_EXECUTABLE}
+                     "${CMAKE_CURRENT_SOURCE_DIR}/../python/test_hiparti.py"
+                     "$<TARGET_FILE:HiParTI>")
+    set_tests_properties(test_python PROPERTIES
+        LABELS "unit;python"
+        TIMEOUT 120
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+endif()
