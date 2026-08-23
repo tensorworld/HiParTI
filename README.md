@@ -1,6 +1,8 @@
 HiParTI
 ------
 
+[![CI](https://github.com/tensorworld/HiParTI/actions/workflows/ci.yml/badge.svg)](https://github.com/tensorworld/HiParTI/actions/workflows/ci.yml)
+
 A Hierarchical Parallel Tensor Infrastructure (HiParTI), is to support fast essential sparse tensor operations and tensor decompositions on multicore CPU and GPU architectures. These basic tensor operations are critical to the overall performance of tensor analysis algorithms (such as tensor decomposition). HiParTI is based on [ParTI!](https://github.com/hpcgarage/ParTI) library developed at GaTech. 
 
 
@@ -54,7 +56,8 @@ A Hierarchical Parallel Tensor Infrastructure (HiParTI), is to support fast esse
 
 2. Check `build` for the resulting library
 
-3. Check `build/benchmark` for example programs
+3. Check `build/benchmark` for benchmark programs, and `build/examples` for
+   the small commented example programs from [`examples/`](examples/)
 
 For NVIDIA GPU support, set in `build.config`:
 
@@ -71,6 +74,20 @@ cd build && ctest
 
 `ctest -L unit` runs only the fast unit tests; with a CUDA build, `ctest -L gpu`
 selects the GPU tests (they are skipped automatically when no device is present).
+
+# Install:
+
+```
+cd build && sudo make install
+```
+
+installs the library, the headers and a pkg-config file (default prefix
+`/usr/local`; override with `-DCMAKE_INSTALL_PREFIX=...` in `build.config`).
+Your own programs then build with:
+
+```
+gcc myprog.c $(pkg-config --cflags --libs hiparti) -o myprog
+```
 
 # Data formats:
 

@@ -1,0 +1,29 @@
+name: Docs
+
+on:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: write
+
+jobs:
+  doxygen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+
+      - name: Build docs
+        run: cd docs && doxygen Doxyfile
+
+      # Publishes docs/html to the gh-pages branch.  To serve it, enable
+      # GitHub Pages once in the repository settings:
+      #   Settings -> Pages -> Source: "Deploy from a branch" -> gh-pages / root
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/html
