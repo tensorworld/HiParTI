@@ -180,26 +180,6 @@ int pti_DistSparseTensorFixed(ptiSparseTensor * tsr,
 }
 
 
-int pti_SparseTensorDumpAllSplits(const pti_SplitResult * splits, ptiIndex const nsplits, FILE *fp) {
-    ptiIndex i = 0;
-    for(i=0; i<nsplits; ++i) {
-    // while(split_i) {
-        const pti_SplitResult *split_i = splits + i;
-        printf("Printing split #%"HIPARTI_PRI_INDEX " of %"HIPARTI_PRI_INDEX "lu:\n", i + 1, nsplits);
-        printf("Index: \n");
-        ptiDumpIndexArray(split_i->inds_low, split_i->tensor.nmodes, fp);
-        printf(" .. \n");
-        ptiDumpIndexArray(split_i->inds_high, split_i->tensor.nmodes, fp);
-        ptiDumpSparseTensor(&split_i->tensor, 0, fp);
-        printf("\n");
-        fflush(fp);
-        // ++ i;
-        // split_i = split_i->next;
-    }
-    return 0;
-}
-
-
 /**
  * Shuffle all indices.
  *
