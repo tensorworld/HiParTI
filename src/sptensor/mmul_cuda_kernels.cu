@@ -24,29 +24,6 @@
 
 
 /* impl_num = 01 */
-__global__ void pti_TTMNaiveKernel(
-    ptiValue *Y_val, ptiIndex Y_stride, ptiNnzIndex Y_nnz,
-    const ptiValue *X_val, ptiNnzIndex X_nnz, const ptiIndex *X_inds_m,
-    const ptiNnzIndex *fiberidx_val, ptiNnzIndex fiberidx_len,
-    const ptiValue *U_val, ptiIndex U_nrows, ptiIndex U_ncols, ptiIndex U_stride,
-    ptiNnzIndex block_offset)
-{
-    const ptiNnzIndex tidx = threadIdx.x;
-    const ptiNnzIndex tidy = threadIdx.y;
-    const ptiNnzIndex i = (blockIdx.x + block_offset) * blockDim.x + tidx;
-
-    if(i >= Y_nnz || tidy >= U_ncols) return;
-    const ptiNnzIndex inz_begin = fiberidx_val[i];
-    const ptiNnzIndex inz_end = fiberidx_val[i+1];
-
-    Y_val[i*Y_stride + tidy] = 0;
-    for(ptiNnzIndex j = inz_begin; j < inz_end; ++j) {
-        const ptiIndex r = X_inds_m[j];
-        Y_val[i*Y_stride + tidy] += X_val[j] * U_val[r*U_stride + tidy];
-    }
-}
-
-
 /* impl_num = 02 */
 __global__ void pti_TTMKernel(
     ptiValue *Y_val, ptiIndex Y_stride, ptiNnzIndex Y_nnz,
@@ -128,7 +105,6 @@ __global__ void pti_TTMNnzKernel(
                 }
             }
         }
-        __syncthreads();
     }
 
 }
@@ -173,17 +149,14 @@ __global__ void pti_TTMNnzRankKernel(
                 for(ptiIndex l=0; l<num_loops_r; ++l) {
                     r = tidy + l * blockDim.y;
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
                 }
 
                 if(rest_loop > 0 && tidy < rest_loop) {
                     r = tidy + num_loops_r * blockDim.y;
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
                 }
             }
         }
-        __syncthreads();
     }
 
 }
@@ -228,17 +201,14 @@ __global__ void pti_TTMRankNnzKernel(
                 for(ptiIndex l=0; l<num_loops_r; ++l) {
                     r = tidx + l * blockDim.x;
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
                 }
 
                 if(rest_loop > 0 && tidx < rest_loop) {
                     r = tidx + num_loops_r * blockDim.x;
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
                 }
             }
         }
-        __syncthreads();
     }
 }
 
@@ -283,7 +253,6 @@ __global__ void pti_TTMRankRBNnzKernel(
                 for(ptiNnzIndex i = inz_begin; i < inz_end; ++i) {
                     const ptiIndex row = X_inds_m[i];
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
                 }
             }
         }
@@ -301,7 +270,6 @@ __global__ void pti_TTMRankRBNnzKernel(
                 for(ptiNnzIndex i = inz_begin; i < inz_end; ++i) {
                     const ptiIndex row = X_inds_m[i];
                     Y_val[x*Y_stride + r] += X_val[i] * U_val[row*U_stride + r];
-                    __syncthreads();
                 }
             }
         }

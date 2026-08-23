@@ -173,6 +173,13 @@ int ptiCudaSparseTensorMulMatrixOneKernel(
         }
         ptiAssert(smen_size >= nthreadsx * nthreadsy * sizeof (ptiValue));
         break;
+    default:
+        fprintf(stderr, "[CUDA SpTns * Mtx] Error: unsupported impl_num %d (valid: 11,12,13,14,15).\n", (int) impl_num);
+        return -1;
+    }
+    if(nthreadsx == 0) {
+        fprintf(stderr, "[CUDA SpTns * Mtx OneKernel] Error: unsupported impl_num %d, no kernel geometry selected.\n", (int) impl_num);
+        return -1;
     }
     dim3 dimBlock(nthreadsx, nthreadsy);
     printf("all_nblocks: %lu, nthreadsx: %lu, nthreadsy: %lu\n", all_nblocks, nthreadsx, nthreadsy);
@@ -182,6 +189,17 @@ int ptiCudaSparseTensorMulMatrixOneKernel(
     ptiStartTimer(timer);
 
 
+    if(impl_num == 15 && smen_size > 0) {
+        int dev_id = 0, smem_optin = 0;
+        cudaGetDevice(&dev_id);
+        cudaDeviceGetAttribute(&smem_optin, cudaDevAttrMaxSharedMemoryPerBlockOptin, dev_id);
+        if((int) smen_size > smem_optin) {
+            fprintf(stderr, "[CUDA SpTns * Mtx] Error: requested %lu B of shared memory per block, "
+                            "device maximum is %d B. Lower smem_size or use impl_num 11/14.\n",
+                            (unsigned long) smen_size, smem_optin);
+            return -1;
+        }
+    }
     switch(impl_num) {
     // case 1:
     case 11: // Naive
@@ -218,14 +236,22 @@ int ptiCudaSparseTensorMulMatrixOneKernel(
         break; 
     case 15:  
         printf("[CUDA SpTns * Mtx] pti_TTMRankRBNnzKernelSM<<<%lu, (%lu, %lu), %lu>>>\n", nblocks, nthreadsx, nthreadsy, smen_size);
+        /* dynamic shared memory above 48 KB requires an explicit opt-in */
+        cudaFuncSetAttribute(pti_TTMRankRBNnzKernelSM,
+            cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smen_size);
         pti_TTMRankRBNnzKernelSM<<<nblocks, dimBlock, smen_size>>>(
             Y_val, Y->stride, Y->nnz,
             X_val, X->nnz, X_inds_m,
             fiberidx_val, fiberidx.len,
             U_val, U->nrows, U->ncols, U->stride);
         break; 
+    default:
+        fprintf(stderr, "[CUDA SpTns * Mtx] Error: unsupported impl_num %d (valid: 11,12,13,14,15).\n", (int) impl_num);
+        return -1;
     }
-    result = cudaThreadSynchronize();
+    result = cudaGetLastError();
+    pti_CheckCudaError(result != 0, "CUDA SpTns * Mtx kernel launch");
+    result = cudaDeviceSynchronize();
     pti_CheckCudaError(result != 0, "CUDA SpTns * Mtx kernel");
 
     ptiStopTimer(timer);

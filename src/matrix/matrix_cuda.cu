@@ -60,7 +60,7 @@ int ptiCudaMatrixDotMulSeq(
 
     pti_MatrixDotMulSeqKernel<<<nblocks, nthreads>>> (mode, nmodes, rank, stride, dev_ata);
     
-    int result = cudaThreadSynchronize();
+    int result = cudaDeviceSynchronize();
     pti_CheckCudaError(result != 0, "CUDA Matrix ptiCudaMatrixDotMulSeq");
 
     return 0;
@@ -106,7 +106,7 @@ int ptiCudaMatrix2Norm(
     dim3 nblocks((nrows + 16 -1) / 16);
 
     pti_Matrix2NormKernel<<<nblocks, nthreads>>>(nrows, ncols, stride, dev_vals, dev_lambda);
-    int result = cudaThreadSynchronize();
+    int result = cudaDeviceSynchronize();
     pti_CheckCudaError(result != 0, "CUDA Matrix ptiCudaMatrix2Norm");
 
     return 0;

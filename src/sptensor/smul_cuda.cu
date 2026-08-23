@@ -91,7 +91,7 @@ int ptiCudaSparseTensorMulScalar(ptiSparseTensor *X, ptiValue a)
 
     printf("[Cuda ptins MulScalar] pti_sMulKernel<<<%lu, (%lu)>>>\n", nblocks, nthreadsx);
     pti_sMulKernel<<<nblocks, dimBlock>>>(X_val, X->nnz, a);
-    result = cudaThreadSynchronize();
+    result = cudaDeviceSynchronize();
     pti_CheckCudaError(result != 0, "Cuda ptins MulScalar kernel");
 
     ptiStopTimer(timer);

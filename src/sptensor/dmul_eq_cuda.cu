@@ -84,7 +84,7 @@ int ptiCudaSparseTensorDotMulEq(ptiSparseTensor *Z, const ptiSparseTensor *X, co
     ptiStartTimer(timer);
 
     pti_DotMulKernel<<<nblocks, nthreads>>>(nnz, Z_val, X_val, Y_val);
-    result = cudaThreadSynchronize();
+    result = cudaDeviceSynchronize();
 
     ptiStopTimer(timer);
     ptiPrintElapsedTime(timer, "CUDA  SpTns DotMul");

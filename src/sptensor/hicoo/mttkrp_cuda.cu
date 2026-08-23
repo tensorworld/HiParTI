@@ -186,7 +186,8 @@ int ptiCudaMTTKRPHiCOO(
         ptiNnzIndex kptr_begin = hitsr->kptr.data[0];   //useless
         ptiNnzIndex kptr_end = hitsr->kptr.data[1];   //useless
 
-        ptiAssert( ptiMTTKRPKernelHiCOO(
+        {
+            int kernel_result = ptiMTTKRPKernelHiCOO(
             mode,
             nmodes,
             nnz,
@@ -206,7 +207,9 @@ int ptiCudaMTTKRPHiCOO(
             dev_einds,
             dev_values,
             dev_mats_order,
-            dev_mats) == 0 );
+            dev_mats);
+            if(kernel_result != 0) return kernel_result;   /* e.g. unsupported impl_num */
+        }
 
     // }   // End loop kernels
     ptiStopTimer(timer);

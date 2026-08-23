@@ -181,25 +181,6 @@ int ptiCudaMTTKRPOneKernel(
         }
         break;
     // case 2: // 2D
-    case 12:
-        if(R <= max_nthreadsy)
-            nthreadsy = R;
-        else
-            nthreadsy = max_nthreadsy;
-        nthreadsx = max_nthreads_per_block / nthreadsy;
-
-        if(nnz < nthreadsx) {
-            nthreadsx = nnz;
-            nblocks = 1;
-        } else {
-            all_nblocks = (nnz + nthreadsx -1) / nthreadsx;
-            if(all_nblocks < max_nblocks) {
-                nblocks = all_nblocks;
-            } else {
-                nblocks = max_nblocks;
-            }   
-        }
-        break;
     // case 3: // 2D, rank split
     //     if(R <= max_nthreadsy)
     //         nthreadsy = R;
@@ -234,6 +215,13 @@ int ptiCudaMTTKRPOneKernel(
             }   
         }
         break;
+    default:
+        fprintf(stderr, "[CUDA SpTns MTTKRP OneKernel] Error: unsupported impl_num %d (valid: 11,15,16).\n", (int) impl_num);
+        return -1;
+    }
+    if(nthreadsx == 0) {
+        fprintf(stderr, "[CUDA SpTns MTTKRP OneKernel] Error: unsupported impl_num %d, no kernel geometry selected.\n", (int) impl_num);
+        return -1;
     }
     dim3 dimBlock(nthreadsx, nthreadsy);
     printf("all_nblocks: %lu, nthreadsx: %lu, nthreadsy: %lu\n", all_nblocks, nthreadsx, nthreadsy);
@@ -241,6 +229,10 @@ int ptiCudaMTTKRPOneKernel(
 
     ptiStartTimer(timer);
 
+    if(nmodes != 3) {
+        fprintf(stderr, "[CUDA SpTns MTTKRP OneKernel] Error: unsupported nmodes %u.\n", nmodes);
+        return -1;
+    }
     switch(nmodes) {
     case 3:
         switch(impl_num) {
@@ -260,50 +252,6 @@ int ptiCudaMTTKRPOneKernel(
                 dev_mats);
             break;
         // case 2:
-        case 12:
-            printf("Execute pti_MTTKRPKernelRankNnz3DOneKernel (%lu, (%u, %u))\n", nblocks, dimBlock.x, dimBlock.y);
-            pti_MTTKRPKernelRankNnz3DOneKernel<<<nblocks, dimBlock>>>(
-                mode,
-                nmodes,
-                nnz,
-                R,
-                stride,
-                dev_Xndims,
-                dev_Xinds,
-                dev_Xvals,
-                dev_mats_order,
-                dev_mats);
-            break;
-        case 3:
-            printf("Execute pti_MTTKRPKernelNnzRankSplit3D (%lu, (%u, %u))\n", nblocks, dimBlock.x, dimBlock.y);
-            // pti_MTTKRPKernelNnzRankSplit3D<<<nblocks, dimBlock>>>(
-            //     mode,
-            //     nmodes,
-            //     nnz,
-            //     R,
-            //     stride,
-            //     dev_Xndims,
-            //     dev_Xinds,
-            //     dev_Xvals,
-            //     dev_mats_order,
-            //     dev_mats,
-            //     block_offset);
-            break;
-        case 4:
-            printf("Execute pti_MTTKRPKernelRankNnz3D (%lu, (%u, %u))\n", nblocks, dimBlock.x, dimBlock.y);
-            // pti_MTTKRPKernelRankNnz3D<<<nblocks, dimBlock>>>(
-            //     mode,
-            //     nmodes,
-            //     nnz,
-            //     R,
-            //     stride,
-            //     dev_Xndims,
-            //     dev_Xinds,
-            //     dev_Xvals,
-            //     dev_mats_order,
-            //     dev_mats,
-            //     block_offset);
-            break;
         // case 5:
         case 15:
             printf("Execute pti_MTTKRPKernelRankSplitNnz3DOneKernel (%lu, (%u, %u))\n", nblocks, dimBlock.x, dimBlock.y);
@@ -333,26 +281,29 @@ int ptiCudaMTTKRPOneKernel(
                 dev_mats_order,
                 dev_mats);
             break;
+        default:
+            fprintf(stderr, "[CUDA SpTns MTTKRP OneKernel] Error: unsupported impl_num %d (valid: 11,15,16).\n", (int) impl_num);
+            return -1;
         }   // End switch impl_num
         break;
 
     case 4: 
         switch(impl_num) {
-        default:
-            printf("Not support: Execute pti_MTTKRPKernelScratch (%lu, %lu)\n", nblocks, nthreadsx);
-            // pti_MTTKRPKernelScratch<<<nblocks, nthreadsx>>>(
-            //     mode,
-            //     nmodes,
-            //     nnz,
-            //     R,
-            //     stride,
-            //     dev_Xndims,
-            //     dev_Xinds,
-            //     dev_Xvals,
-            //     dev_mats_order,
-            //     dev_mats,
-            //     dev_scratch,
-            //     block_offset);
+    default:
+        printf("Not support: Execute pti_MTTKRPKernelScratch (%lu, %lu)\n", nblocks, nthreadsx);
+        // pti_MTTKRPKernelScratch<<<nblocks, nthreadsx>>>(
+        //     mode,
+        //     nmodes,
+        //     nnz,
+        //     R,
+        //     stride,
+        //     dev_Xndims,
+        //     dev_Xinds,
+        //     dev_Xvals,
+        //     dev_mats_order,
+        //     dev_mats,
+        //     dev_scratch,
+        //     block_offset);
         }   // End switch impl_num
         break;
 
@@ -372,7 +323,7 @@ int ptiCudaMTTKRPOneKernel(
         //     dev_scratch,
         //     block_offset);
     }   // End switch nmodes
-    result = cudaThreadSynchronize();
+    result = cudaDeviceSynchronize();
     pti_CheckCudaError(result != 0, "CUDA SpTns MTTKRP");
 
 

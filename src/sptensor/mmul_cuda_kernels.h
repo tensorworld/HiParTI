@@ -20,13 +20,6 @@
 #define PARTI_MMUL_KERNELS_H
 
 /* impl_num = 01 */
-__global__ void pti_TTMNaiveKernel(
-    ptiValue *Y_val, ptiIndex Y_stride, ptiNnzIndex Y_nnz,
-    const ptiValue *X_val, ptiNnzIndex X_nnz, const ptiIndex *X_inds_m,
-    const ptiNnzIndex *fiberidx_val, ptiNnzIndex fiberidx_len,
-    const ptiValue *U_val, ptiIndex U_nrows, ptiIndex U_ncols, ptiIndex U_stride,
-    ptiNnzIndex block_offset) ;
-
 /* impl_num = 02 */
 __global__ void pti_TTMKernel(
     ptiValue *Y_val, ptiIndex Y_stride, ptiNnzIndex Y_nnz,

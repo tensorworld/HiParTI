@@ -24,112 +24,12 @@ __device__ void unlock(int* mutex);
 
 
 /* impl_num = 01 */
-__global__ void pti_MTTKRPKernelNnz3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiNnzIndex block_offset);
-
-
 /* impl_num = 02 */
-__global__ void pti_MTTKRPKernelNnzRank3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiNnzIndex block_offset);
-
-
 /* impl_num = 03 */
-__global__ void pti_MTTKRPKernelNnzRankSplit3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiNnzIndex block_offset);
-
-
 /* impl_num = 04 */
-__global__ void pti_MTTKRPKernelRankNnz3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiNnzIndex block_offset);
-
-
 /* impl_num = 05 */
-__global__ void pti_MTTKRPKernelRankSplitNnz3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiNnzIndex block_offset);
-
-
 /* impl_num = 06 */
-__global__ void pti_MTTKRPKernelRankSplitNnzRB3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiNnzIndex block_offset);
-
-
 /* impl_num = 09, for arbitraty nmodes. Scratch is necessary for tensors with arbitrary modes. */
-__global__ void pti_MTTKRPKernelScratch(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiValue * dev_scratch,
-    ptiNnzIndex block_offset);
-
-
-
 /**** impl_num = 1x: One GPU using one kernel ****/
 /* impl_num = 11 */
 __global__ void pti_MTTKRPKernelNnz3DOneKernel(
@@ -187,138 +87,16 @@ __global__ void pti_MTTKRPKernelRankSplitNnzRB3DOneKernel(
 
 /**** impl_num = 2x: Stream One GPU: cache blocking ****/
 /* impl_num = 21. */
-__global__ void pti_MTTKRPKernelBlockNnz3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex * nnz,
-    const ptiNnzIndex * dev_nnz_blk_begin,
-    const ptiIndex R,
-    const ptiIndex stride,
-    ptiIndex * const inds_low_allblocks,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats);
-
-
 /* impl_num = 25 */
-__global__ void pti_MTTKRPKernelBlockRankSplitNnz3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex * nnz,
-    const ptiNnzIndex * dev_nnz_blk_begin,
-    const ptiIndex R,
-    const ptiIndex stride,
-    ptiIndex * const inds_low_allblocks,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats);
-
-
 /* impl_num = 26 */
-__global__ void pti_MTTKRPKernelBlockRankSplitNnzRB3D(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex * nnz,
-    const ptiNnzIndex * dev_nnz_blk_begin,
-    const ptiIndex R,
-    const ptiIndex stride,
-    ptiIndex * const inds_low_allblocks,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats);
-
-
-
 /**** impl_num = 3x: Stream One GPU: shared memory blocking for coarse grain ****/
 /* impl_num = 35 */
-__global__ void pti_MTTKRPKernelBlockRankSplitNnz3D_SMCoarse(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex * nnz,
-    const ptiNnzIndex * dev_nnz_blk_begin,
-    const ptiIndex R,
-    const ptiIndex stride,
-    ptiIndex * const inds_low_allblocks,
-    ptiIndex ** const inds_low,
-    ptiIndex ** const Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats);
-
 /* impl_num = 36 */
-__global__ void pti_MTTKRPKernelBlockRankSplitNnz3D_SMCoarseRB(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex * nnz,
-    const ptiNnzIndex * dev_nnz_blk_begin,
-    const ptiIndex R,
-    const ptiIndex stride,
-    ptiIndex * const inds_low_allblocks,
-    ptiIndex ** const inds_low,
-    ptiIndex ** const Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats);
-
-
 /**** impl_num = 4x: Stream One GPU: shared memory blocking for medium grain ****/
 /* impl_num = 45 */
-__global__ void pti_MTTKRPKernelBlockRankSplitNnz3D_SMMedium(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex * nnz,
-    const ptiNnzIndex * dev_nnz_blk_begin,
-    const ptiIndex R,
-    const ptiIndex stride,
-    ptiIndex * const inds_low_allblocks,
-    ptiIndex ** const inds_low,
-    ptiIndex ** const Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats);
-
-
 /* impl_num = 46 */
-__global__ void pti_MTTKRPKernelBlockRankSplitNnz3D_SMMediumRB(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex * nnz,
-    const ptiNnzIndex * dev_nnz_blk_begin,
-    const ptiIndex R,
-    const ptiIndex stride,
-    ptiIndex * const inds_low_allblocks,
-    ptiIndex ** const inds_low,
-    ptiIndex ** const Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats);
-
-
 /**** impl_num = 5x: multiple GPUs ****/
 /* impl_num = 59, only the interface is a bit different. */
-__global__ void pti_MTTKRPKernelScratchDist(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex R,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    const ptiIndex * inds_low,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiValue * dev_scratch);
-
-
-
 /* impl_num = 31 */
 __global__ void pti_MTTKRPKernelNnz3DOneKernel(
     const ptiIndex mode,

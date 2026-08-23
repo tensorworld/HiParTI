@@ -56,6 +56,10 @@ int ptiMTTKRPKernelHiCOO(
     ptiIndex shr_size = 0;
     ptiNnzIndex all_nblocks = blength;
 
+    if(nmodes != 3) {
+        fprintf(stderr, "[CUDA SpTns MTTKRP HiCOO] Error: only 3-D tensors are supported on GPU (got %u modes).\n", nmodes);
+        return -1;
+    }
     switch(nmodes) {
     case 3: /* 3-D tensors */
         switch(impl_num) {
@@ -156,8 +160,27 @@ int ptiMTTKRPKernelHiCOO(
             shr_size = nmodes * (ptiIndex)pow(2, sb_bits) * R * sizeof(ptiValue);
             break;
 
+        default:
+            fprintf(stderr, "[CUDA SpTns MTTKRP HiCOO] Error: unsupported impl_num %d (valid: 1,2,3,4,14,15,16).\n", (int) impl_num);
+            return -1;
         }
 
+        if(nthreadsx == 0) {
+            fprintf(stderr, "[CUDA SpTns MTTKRP HiCOO] Error: unsupported impl_num %d, no kernel geometry selected.\n", (int) impl_num);
+            return -1;
+        }
+        {
+            ptiNnzIndex const threads_per_block =
+                (ptiNnzIndex) nthreadsx * (nthreadsy == 0 ? 1 : nthreadsy);
+            if(threads_per_block > 1024) {
+                fprintf(stderr,
+                    "[CUDA SpTns MTTKRP HiCOO] Error: impl_num %d needs %lu threads/block "
+                    "(max_nnzb=%lu, R=%u), over the CUDA limit of 1024. "
+                    "Use a smaller -b (block bits), or impl_num 1, 4 or 14.\n",
+                    (int) impl_num, threads_per_block, (unsigned long) max_nnzb, R);
+                return -1;
+            }
+        }
         dim3 dimBlock(nthreadsx, nthreadsy);
         switch(impl_num) {
         case 1: // Naive, 1D
@@ -327,11 +350,16 @@ int ptiMTTKRPKernelHiCOO(
                 dev_mats);
             break;
 
+        default:
+            fprintf(stderr, "[CUDA SpTns MTTKRP HiCOO] Error: unsupported impl_num %d (valid: 1,2,3,4,14,15,16).\n", (int) impl_num);
+            return -1;
          }
 
     break;
     }   // End switch nmodes
-    result = cudaThreadSynchronize();
+    result = cudaGetLastError();
+    pti_CheckCudaError(result != 0, "CUDA HiCOO SpTns MTTKRP kernel launch");
+    result = cudaDeviceSynchronize();
     pti_CheckCudaError(result != 0, "CUDA HiCOO SpTns MTTKRP");
 
     return 0;
@@ -824,16 +852,17 @@ __global__ void pti_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked_SM(
                     }
 
                 }   // End loop entries
+                __syncthreads();
 
                 /* Store back mats[nmodes] from shared memory */
-                if (tidy < sb_size) {
+                if (tidy < sb_size && blocked_mode_i + tidy < dev_ndims[mode]) {
                     for(ptiIndex l=0; l<num_loops_r; ++l) {
                         r = tidx + l * blockDim.x;
-                        atomicAdd( &(blocked_mvals[tidy * stride + r]),  sm_blocked_mvals[tidy * stride + r] );
+                        atomicAdd( &(blocked_mvals[tidy * stride + r]),  sm_blocked_mvals[tidy * R + r] );
                     }
                     if(rest_loop > 0 && tidx < rest_loop) {
                         r = tidx + num_loops_r * blockDim.x;
-                        atomicAdd( &(blocked_mvals[tidy * stride + r]),  sm_blocked_mvals[tidy * stride + r] );
+                        atomicAdd( &(blocked_mvals[tidy * stride + r]),  sm_blocked_mvals[tidy * R + r] );
                     }
                 }
 
@@ -866,6 +895,7 @@ __global__ void pti_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked_SM(
             }   // End if: block size
 
         }   // End if: block range
+        __syncthreads();
     }   // End loop blocks
 
 }
@@ -901,8 +931,8 @@ __global__ void pti_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked_AllSM(
     /* Data in shared memory */
     extern __shared__ ptiValue mempool[];
     ptiValue * sm_blocked_mvals = mempool;
-    ptiValue * sm_blocked_times_mat_1 = mempool + sb_size * R * sizeof(ptiValue);
-    ptiValue * sm_blocked_times_mat_2 = sm_blocked_times_mat_1 + sb_size * R * sizeof(ptiValue);
+    ptiValue * sm_blocked_times_mat_1 = mempool + sb_size * R;
+    ptiValue * sm_blocked_times_mat_2 = sm_blocked_times_mat_1 + sb_size * R;
 
     ptiNnzIndex const all_nblocks = blength;
     const ptiIndex tidx = threadIdx.x;
@@ -982,9 +1012,10 @@ __global__ void pti_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked_AllSM(
                     }
 
                 }   // End loop entries
+                __syncthreads();
 
                 /* Store back mats[nmodes] from shared memory */
-                if (tidy < sb_size) {
+                if (tidy < sb_size && blocked_mode_i + tidy < dev_ndims[mode]) {
                     for(ptiIndex l=0; l<num_loops_r; ++l) {
                         r = tidx + l * blockDim.x;
                         atomicAdd( &(blocked_mvals[tidy * stride + r]),  sm_blocked_mvals[tidy * R + r] );
@@ -1024,6 +1055,7 @@ __global__ void pti_MTTKRPKernelRankSplitHiCOORB_3D_MatrixBlocked_AllSM(
             }   // End if: block size
 
         }   // End if: block range
+        __syncthreads();
     }   // End loop blocks
 
 }
