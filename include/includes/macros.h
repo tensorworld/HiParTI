@@ -56,3 +56,9 @@ typedef enum {
 } PtiError;
 
 #endif
+
+/* Fixed seed for ptiRandomizeMatrix so runs are reproducible and testable.
+   Override with -DHIPARTI_RANDOM_SEED=... to vary the data. */
+#ifndef HIPARTI_RANDOM_SEED
+#define HIPARTI_RANDOM_SEED 0x123456789ABCDEFULL
+#endif

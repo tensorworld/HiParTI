@@ -52,10 +52,14 @@
   typedef float ptiValue;
   #define HIPARTI_PRI_VALUE "f"
   #define HIPARTI_SCN_VALUE "f"
+  /* Shortest representation that reads back bit-identical (float: 9 significant digits) */
+  #define HIPARTI_PRI_VALUE_FULL ".9g"
 #elif HIPARTI_VALUE_TYPEWIDTH == 64
   typedef double ptiValue;
   #define HIPARTI_PRI_VALUE "lf"
   #define HIPARTI_SCN_VALUE "lf"
+  /* Shortest representation that reads back bit-identical (double: 17 significant digits) */
+  #define HIPARTI_PRI_VALUE_FULL ".17g"
 #else
   #error "Unrecognized HIPARTI_VALUE_TYPEWIDTH."
 #endif

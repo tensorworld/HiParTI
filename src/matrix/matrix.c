@@ -19,6 +19,7 @@
 #include <HiParTI.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -65,10 +66,18 @@ int ptiNewMatrix(ptiMatrix *mtx, ptiIndex const nrows, ptiIndex const ncols) {
  * The random number will have a precision of 31 bits out of 51 bits
  */
 int ptiRandomizeMatrix(ptiMatrix *mtx) {
-  srand(time(NULL));
+  /* splitmix64: deterministic and reproducible across runs and platforms, so a
+     test can regenerate the exact same matrix and check the result independently.
+     Row-major over [0, ncols), one draw per element. */
+  uint64_t state = HIPARTI_RANDOM_SEED;
   for(ptiIndex i=0; i<mtx->nrows; ++i)
     for(ptiIndex j=0; j<mtx->ncols; ++j) {
-      mtx->values[i * mtx->stride + j] = i + j + 1; //ptiRandomValue();
+      uint64_t z = (state += 0x9E3779B97F4A7C15ULL);
+      z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
+      z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
+      z =  z ^ (z >> 31);
+      /* top 53 bits -> uniform in [0,1) */
+      mtx->values[i * mtx->stride + j] = (ptiValue)((double)(z >> 11) / 9007199254740992.0);
     }
   return 0;
 }

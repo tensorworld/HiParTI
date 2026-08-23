@@ -39,7 +39,7 @@ int ptiDumpMatrix(ptiMatrix *mtx, FILE *fp) {
     pti_CheckOSError(iores < 0, "Mtx Dump");
     for(ptiIndex i=0; i < nrows; ++i) {
       for(ptiIndex j=0; j < ncols; ++j) {
-          iores = fprintf(fp, "%.2"HIPARTI_PRI_VALUE "\t", mtx->values[i * stride + j]);
+          iores = fprintf(fp, "%"HIPARTI_PRI_VALUE_FULL "\t", mtx->values[i * stride + j]);
           pti_CheckOSError(iores < 0, "Mtx Dump");
       }
       iores = fprintf(fp, "\n");
@@ -65,7 +65,7 @@ int ptiDumpRankMatrix(ptiRankMatrix *mtx, FILE *fp) {
     pti_CheckOSError(iores < 0, "RankMtx Dump");
     for(ptiIndex i=0; i < nrows; ++i) {
       for(ptiElementIndex j=0; j < ncols; ++j) {
-          iores = fprintf(fp, "%.2"HIPARTI_PRI_VALUE "\t", mtx->values[i * stride + j]);
+          iores = fprintf(fp, "%"HIPARTI_PRI_VALUE_FULL "\t", mtx->values[i * stride + j]);
           pti_CheckOSError(iores < 0, "RankMtx Dump");
       }
       iores = fprintf(fp, "\n");

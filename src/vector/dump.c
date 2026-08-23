@@ -122,7 +122,7 @@ int ptiDumpValueVector(ptiValueVector *vec, FILE *fp) {
     iores = fprintf(fp, "ptiValueVector length: %"HIPARTI_PRI_NNZ_INDEX "\n", len);
     pti_CheckOSError(iores < 0, "ValVec Dump");
     for(ptiNnzIndex i=0; i < len; ++i) {
-        iores = fprintf(fp, "%"HIPARTI_PRI_VALUE "\t", vec->data[i]);
+        iores = fprintf(fp, "%"HIPARTI_PRI_VALUE_FULL "\t", vec->data[i]);
         pti_CheckOSError(iores < 0, "ValVec Dump");
     }
     iores = fprintf(fp, "\n");

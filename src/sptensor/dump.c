@@ -46,7 +46,7 @@ int ptiDumpSparseTensor(const ptiSparseTensor *tsr, ptiIndex start_index, FILE *
             iores = fprintf(fp, "%"HIPARTI_PRI_INDEX "\t", tsr->inds[mode].data[i]+start_index);
             pti_CheckOSError(iores < 0, "SpTns Dump");
         }
-        iores = fprintf(fp, "%"HIPARTI_PRI_VALUE "\n", (double) tsr->values.data[i]);
+        iores = fprintf(fp, "%"HIPARTI_PRI_VALUE_FULL "\n", (double) tsr->values.data[i]);
         pti_CheckOSError(iores < 0, "SpTns Dump");
     }
     return 0;

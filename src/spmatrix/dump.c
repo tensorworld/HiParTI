@@ -35,7 +35,7 @@ int ptiDumpSparseMatrix(const ptiSparseMatrix *mtx, ptiIndex start_index, FILE *
         pti_CheckOSError(iores < 0, "SpMtx Dump");
         iores = fprintf(fp, "%"HIPARTI_PRI_INDEX "\t", mtx->colind.data[i] + start_index);
         pti_CheckOSError(iores < 0, "SpMtx Dump");
-        iores = fprintf(fp, "%"HIPARTI_PRI_VALUE "\n", (double) mtx->values.data[i]);
+        iores = fprintf(fp, "%"HIPARTI_PRI_VALUE_FULL "\n", (double) mtx->values.data[i]);
         pti_CheckOSError(iores < 0, "SpMtx Dump");
     }
     return 0;
