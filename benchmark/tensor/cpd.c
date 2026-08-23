@@ -46,7 +46,7 @@ int main(int argc, char ** argv) {
     FILE *fo = NULL;
     ptiSparseTensor X;
     ptiIndex R = 16;
-    ptiIndex niters = 1; //5; // 50
+    ptiIndex niters = 5; // 50
     double tol = 1e-5;
     ptiKruskalTensor ktensor;
     int nloops = 0;

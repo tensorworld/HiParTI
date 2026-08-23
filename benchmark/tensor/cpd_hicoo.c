@@ -60,7 +60,7 @@ int main(int argc, char ** argv) {
     ptiIndex R = 16;
     int cuda_dev_id = -2;
     // int nloops = 1; // 5
-    ptiIndex niters = 1; //5; // 50
+    ptiIndex niters = 5; // 50
     double tol = 1e-5;
     int impl_num = 1;
     int renumber = 0;
