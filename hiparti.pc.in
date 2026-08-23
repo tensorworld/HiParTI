@@ -1,0 +1,9 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: HiParTI
+Description: Hierarchical Parallel Tensor Infrastructure - sparse tensor operations and decompositions on multicore CPU and GPU
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -lHiParTI -fopenmp -lm
+Cflags: -I${includedir}

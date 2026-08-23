@@ -1,6 +1,6 @@
 # Requires
-cmake_minimum_required(VERSION 3.2)  # CMake 3.2 supports CUDA 7.0
-project(HiParTI)
+cmake_minimum_required(VERSION 3.5)  # 3.5 is the oldest version CMake 4.x still accepts
+project(HiParTI VERSION 1.0.0 LANGUAGES C CXX)
 
 # Enable unit test
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake-modules")
@@ -223,4 +223,20 @@ if(BUILD_STATIC)
 endif()
 
 add_subdirectory("benchmark")
+add_subdirectory("examples")
 add_subdirectory("tests")
+
+# Install rules: make install puts the library, the public headers and a
+# pkg-config file under CMAKE_INSTALL_PREFIX (default /usr/local).
+include(GNUInstallDirs)
+if(BUILD_SHARED)
+    install(TARGETS HiParTI LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+if(BUILD_STATIC)
+    install(TARGETS HiParTI_s ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+install(FILES include/HiParTI.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY include/includes DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+configure_file(hiparti.pc.in hiparti.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/hiparti.pc
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
