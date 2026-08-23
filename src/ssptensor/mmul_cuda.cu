@@ -20,20 +20,24 @@
 
 __global__ static void pti_TTMKernel(
     ptiValue *Y_val,
+    ptiIndex Y_stride,
     const ptiValue *X_val,
-    ptiIndex XY_stride,
+    ptiIndex X_stride,
     ptiNnzIndex XY_nnz,
     const ptiValue *U_val,
     ptiIndex U_nrows, ptiIndex U_ncols, ptiIndex U_stride,
     ptiIndex mode
 ) {
+    /* X and Y have different mode dimensions (ndims[mode] vs U_ncols), so
+       their row strides differ; using one stride for both misreads X
+       whenever roundup8(ndims[mode]) != roundup8(U_ncols). */
     size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
     if(tid < XY_nnz) {
         size_t r, k;
         for(k = 0; k < U_ncols; ++k) {
-            Y_val[tid*XY_stride + k] = 0;
+            Y_val[tid*Y_stride + k] = 0;
             for(r = 0; r < U_nrows; ++r) {
-                Y_val[tid*XY_stride + k] += X_val[tid*XY_stride + r] * U_val[r*U_stride + k];
+                Y_val[tid*Y_stride + k] += X_val[tid*X_stride + r] * U_val[r*U_stride + k];
             }
         }
     }
@@ -58,7 +62,7 @@ int ptiCudaSemiSparseTensorMulMatrix(
     if(X->ndims[mode] != U->nrows) {
         return -1;
     }
-    ind_buf = new ptiIndex[X->nmodes * sizeof *ind_buf];
+    ind_buf = new ptiIndex[X->nmodes];
     if(!ind_buf) {
         return -1;
     }
@@ -106,7 +110,7 @@ int ptiCudaSemiSparseTensorMulMatrix(
     }
     cudaMemcpy(U_val, U->values, U->nrows * U->stride * sizeof (ptiValue), cudaMemcpyHostToDevice);
 
-    pti_TTMKernel<<<blocks_count, 256>>>(Y_val, X_val, Y->stride, Y->nnz, U_val, U->nrows, U->ncols, U->stride, mode);
+    pti_TTMKernel<<<blocks_count, 256>>>(Y_val, Y->stride, X_val, X->stride, Y->nnz, U_val, U->nrows, U->ncols, U->stride, mode);
     result = cudaGetLastError();
     if(result != 0) {
         return result;

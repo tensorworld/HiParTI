@@ -27,7 +27,6 @@ __global__ static void pti_DotMulKernel(size_t nnz, ptiValue *Z_val, ptiValue *X
     if(i < nnz) {
         Z_val[i] = X_val[i] * Y_val[i];
     }
-    __syncthreads();
 }
 
 

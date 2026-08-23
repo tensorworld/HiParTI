@@ -142,6 +142,86 @@ static void hicoo_gpu(const char *path, ptiIndex R,
     ptiFreeSparseTensor(&X);
 }
 
+
+/* element-wise and semi-sparse GPU operations vs their CPU counterparts */
+static void gpu_elementwise(const char *path, ptiIndex R)
+{
+    ptiSparseTensor A, B, Zc, Zg;
+    if(pti_test_load(&A, path) != 0 || pti_test_load(&B, path) != 0) { ++pti_test_failures; return; }
+    char what[160];
+
+    /* MulScalar: GPU in-place vs CPU in-place */
+    snprintf(what, sizeof what, "GPU MulScalar (%s)", path);
+    int rc = ptiCudaSparseTensorMulScalar(&A, (ptiValue) 2.5);
+    CHECK(rc == 0, "%s failed rc=%d", what, rc);
+    if(rc == 0) {
+        ptiSparseTensorMulScalar(&B, (ptiValue) 2.5);
+        double worst = 0;
+        for(ptiNnzIndex z = 0; z < A.nnz; ++z) {
+            double d = fabs((double) A.values.data[z] - (double) B.values.data[z]);
+            if(d > worst) worst = d;
+        }
+        CHECK(worst <= 1e-6, "%s: max abs diff %g", what, worst);
+    }
+
+    /* DotMulEq: GPU vs CPU (operands must be identically ordered - they are) */
+    snprintf(what, sizeof what, "GPU DotMulEq (%s)", path);
+    rc = ptiCudaSparseTensorDotMulEq(&Zg, &A, &A);
+    CHECK(rc == 0, "%s failed rc=%d", what, rc);
+    if(rc == 0) {
+        CHECK(ptiSparseTensorDotMulEq(&Zc, &A, &A) == 0, "%s: cpu ref failed", what);
+        CHECK(Zg.nnz == Zc.nnz, "%s: nnz differ", what);
+        double worst = 0, scale = 0;
+        for(ptiNnzIndex z = 0; z < Zg.nnz && z < Zc.nnz; ++z) {
+            double e = (double) Zc.values.data[z];
+            if(fabs(e) > scale) scale = fabs(e);
+            double d = fabs((double) Zg.values.data[z] - e);
+            if(d > worst) worst = d;
+        }
+        CHECK(worst <= 2e-5 * (scale > 0 ? scale : 1.0), "%s: max diff %g", what, worst);
+        ptiFreeSparseTensor(&Zc);
+        ptiFreeSparseTensor(&Zg);
+    }
+    ptiFreeSparseTensor(&A);
+    ptiFreeSparseTensor(&B);
+
+    /* semi-sparse TTM: GPU vs CPU, per mode.  The GPU kernel takes separate X
+       and Y strides - it used one stride for both, which was wrong whenever
+       roundup8(ndims[mode]) != roundup8(R) (correct on tiny tensors only). */
+    ptiSparseTensor X;
+    if(pti_test_load(&X, path) != 0) { ++pti_test_failures; return; }
+    for(ptiIndex mode = 0; mode < X.nmodes; ++mode) {
+        ptiSemiSparseTensor S;
+        if(ptiSparseTensorToSemiSparseTensor(&S, &X, mode) != 0) continue;
+        ptiMatrix U;
+        ptiNewMatrix(&U, X.ndims[mode], R);
+        ptiRandomizeMatrix(&U);
+
+        ptiSemiSparseTensor Yc, Yg;
+        int rc1 = ptiSemiSparseTensorMulMatrix(&Yc, &S, &U, mode);
+        int rc2 = ptiCudaSemiSparseTensorMulMatrix(&Yg, &S, &U, mode);
+        snprintf(what, sizeof what, "GPU SemiSparse TTM (%s mode %u R=%u)", path, mode, R);
+        CHECK(rc1 == 0 && rc2 == 0, "%s failed (%d,%d)", what, rc1, rc2);
+        if(rc1 == 0 && rc2 == 0) {
+            CHECK(Yc.nnz == Yg.nnz, "%s: nnz differ", what);
+            double worst = 0, scale = 0;
+            for(ptiNnzIndex z = 0; z < Yc.nnz && z < Yg.nnz; ++z)
+                for(ptiIndex r = 0; r < R; ++r) {
+                    double e = (double) Yc.values.values[z * Yc.stride + r];
+                    if(fabs(e) > scale) scale = fabs(e);
+                    double d = fabs((double) Yg.values.values[z * Yg.stride + r] - e);
+                    if(d > worst) worst = d;
+                }
+            CHECK(worst <= 2e-5 * (scale > 0 ? scale : 1.0), "%s: max diff %g", what, worst);
+        }
+        if(rc1 == 0) ptiFreeSemiSparseTensor(&Yc);
+        if(rc2 == 0) ptiFreeSemiSparseTensor(&Yg);
+        ptiFreeMatrix(&U);
+        ptiFreeSemiSparseTensor(&S);
+    }
+    ptiFreeSparseTensor(&X);
+}
+
 int main(int argc, char **argv)
 {
     DATA_DIR = (argc > 1) ? argv[1] : "data";
@@ -158,6 +238,7 @@ int main(int argc, char **argv)
             snprintf(p, sizeof p, "%s/tensors/%s", DATA_DIR, tensors[t]);
             coo_gpu(p, ranks[k]);
             hicoo_gpu(p, ranks[k], 2, 4, 2);
+            gpu_elementwise(p, ranks[k]);
         }
     return TEST_SUMMARY();
 }
