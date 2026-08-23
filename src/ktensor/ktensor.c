@@ -92,6 +92,8 @@ double KruskalTensorFit(
   // printf("residual: %lf\n", residual);
   if (residual > 0.0) {
     residual = sqrt(residual);
+  } else {
+    residual = 0.0;
   }
   double fit = 1 - (residual / sqrt(ptien_normsq));
 
@@ -127,7 +129,7 @@ double KruskalTensorFrobeniusNormSquared(
 #endif
     for(ptiIndex i=0; i < rank; ++i) {
         for(ptiIndex j=i; j < rank; ++j) {
-            tmp_atavals[j * stride + i] *= atavals[j * stride + i];
+            tmp_atavals[i * stride + j] *= atavals[i * stride + j];
         }
     }
   }
@@ -139,7 +141,7 @@ double KruskalTensorFrobeniusNormSquared(
   for(ptiIndex i=0; i < rank; ++i) {
     norm_mats += tmp_atavals[i+(i*stride)] * lambda[i] * lambda[i];
     for(ptiIndex j=i+1; j < rank; ++j) {
-      norm_mats += tmp_atavals[i+(j*stride)] * lambda[i] * lambda[j] * 2;
+      norm_mats += tmp_atavals[j+(i*stride)] * lambda[i] * lambda[j] * 2;
     }
   }
 

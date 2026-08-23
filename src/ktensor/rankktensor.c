@@ -90,6 +90,8 @@ double KruskalTensorFitHiCOO(
   double residual = ptien_normsq + norm_mats - 2 * inner;
   if (residual > 0.0) {
     residual = sqrt(residual);
+  } else {
+    residual = 0.0;
   }
   // printf("residual: %lf\n", residual);
   double fit = 1 - (residual / sqrt(ptien_normsq));
@@ -127,7 +129,7 @@ double KruskalTensorFrobeniusNormSquaredRank(
 #endif
     for(ptiElementIndex i=0; i < rank; ++i) {
         for(ptiElementIndex j=i; j < rank; ++j) {
-            tmp_atavals[j * stride + i] *= atavals[j * stride + i];
+            tmp_atavals[i * stride + j] *= atavals[i * stride + j];
         }
     }
   }
@@ -141,7 +143,7 @@ double KruskalTensorFrobeniusNormSquaredRank(
   for(ptiElementIndex i=0; i < rank; ++i) {
     norm_mats += tmp_atavals[i+(i*stride)] * lambda[i] * lambda[i];
     for(ptiElementIndex j=i+1; j < rank; ++j) {
-      norm_mats += tmp_atavals[i+(j*stride)] * lambda[i] * lambda[j] * 2;
+      norm_mats += tmp_atavals[j+(i*stride)] * lambda[i] * lambda[j] * 2;
     }
     // printf("inter norm_mats: %lf\n", norm_mats);
   }

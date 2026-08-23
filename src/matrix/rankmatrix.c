@@ -19,6 +19,7 @@
 #include <HiParTI.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -68,10 +69,16 @@ int ptiNewRankMatrix(ptiRankMatrix *mtx, ptiIndex const nrows, ptiElementIndex c
  */
 int ptiRandomizeRankMatrix(ptiRankMatrix *mtx, ptiIndex const nrows, ptiElementIndex const ncols)
 {
-  srand(time(NULL));
+  /* splitmix64, same scheme as ptiRandomizeMatrix: deterministic and
+     reproducible, uniform in [0,1). */
+  uint64_t state = HIPARTI_RANDOM_SEED;
   for(ptiIndex i=0; i<nrows; ++i)
     for(ptiElementIndex j=0; j<ncols; ++j) {
-      mtx->values[i * mtx->stride + j] = i + j + 1; //ptiRandomValue();
+      uint64_t z = (state += 0x9E3779B97F4A7C15ULL);
+      z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
+      z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
+      z =  z ^ (z >> 31);
+      mtx->values[i * mtx->stride + j] = (ptiValue)((double)(z >> 11) / 9007199254740992.0);
     }
   return 0;
 }
