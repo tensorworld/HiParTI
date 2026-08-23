@@ -279,6 +279,12 @@ int ptiLoadSparseTensor(ptiSparseTensor *tsr, ptiIndex start_index, char const *
     FILE * fp = fopen(fname, "r");
     ptiAssert(fp != NULL);
 
+    /* A TensorSuite .tns shares the extension but not the layout; detect it by banner. */
+    if(pti_TensorSuiteSniff(fp)) {
+        fclose(fp);
+        return ptiLoadSparseTensorTensorSuite(tsr, start_index, fname, PTI_TS_FILL_ONES);
+    }
+
     int iores;
     switch(get_file_type(fname)) {
         case 0:

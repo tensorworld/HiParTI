@@ -25,6 +25,16 @@ int ptiCopySparseTensor(ptiSparseTensor *dest, const ptiSparseTensor *src, int c
 void ptiFreeSparseTensor(ptiSparseTensor *tsr);
 double SparseTensorFrobeniusNormSquared(ptiSparseTensor const * const ptien);
 int ptiLoadSparseTensor(ptiSparseTensor *tsr, ptiIndex start_index, char const * const fname);
+
+/* How to fill values for TensorSuite tensors that store only a pattern
+   (metadata "values_provided": false). */
+typedef enum {
+    PTI_TS_FILL_ONES   = 0,   /* every value 1.0  - deterministic, best for correctness tests */
+    PTI_TS_FILL_RANDOM = 1    /* splitmix64 from HIPARTI_RANDOM_SEED - reproducible, better numerically */
+} ptiTensorSuiteFill;
+
+int ptiLoadSparseTensorTensorSuite(ptiSparseTensor *tsr, ptiIndex start_index, char const * const fname, ptiTensorSuiteFill fill);
+int pti_TensorSuiteSniff(FILE * fp);
 int ptiDumpSparseTensor(const ptiSparseTensor *tsr, ptiIndex start_index, FILE *fp);
 int ptiMatricize(ptiSparseTensor const * const X,
     ptiIndex const m,
@@ -155,12 +165,9 @@ int ptiSparseTensorDotDiv(ptiSparseTensor *Z, ptiSparseTensor * const X, ptiSpar
 
 int ptiSparseTensorMulMatrix(ptiSemiSparseTensor *Y, ptiSparseTensor * const X, ptiMatrix *const U, ptiIndex mode);
 int ptiOmpSparseTensorMulMatrix(ptiSemiSparseTensor *Y, ptiSparseTensor * const X, ptiMatrix * const U, ptiIndex mode);
-int ptiCudaSparseTensorMulMatrix(ptiSemiSparseTensor *Y, ptiSparseTensor *X, const ptiMatrix *U, ptiIndex const mode);
 int ptiCudaSparseTensorMulMatrixOneKernel(ptiSemiSparseTensor *Y, ptiSparseTensor *X, const ptiMatrix *U, ptiIndex const mode, ptiIndex const impl_num, ptiNnzIndex const smen_size);
 
 int ptiSparseTensorMulVector(ptiSemiSparseTensor *Y, ptiSparseTensor * const X, ptiValueVector * const V, ptiIndex mode);
-
-int ptiSparseTensorMulTensor(ptiSparseTensor *Z, ptiSparseTensor * const X, ptiSparseTensor *const Y, ptiIndex num_cmodes, ptiIndex * cmodes_X, ptiIndex * cmodes_Y);
 
 /**
  * Kronecker product
@@ -201,52 +208,13 @@ int ptiOmpMTTKRP_Lock(
     ptiIndex const mode,
     const int tk,
     ptiMutexPool * lock_pool);
-int ptiCudaMTTKRP(
-    ptiSparseTensor const * const X,
-    ptiMatrix * mats[],     // mats[nmodes] as temporary space.
-    ptiIndex * const mats_order,    // Correspond to the mode order of X.
-    ptiIndex const mode,
-    ptiIndex const impl_num);
 int ptiCudaMTTKRPOneKernel(
     ptiSparseTensor const * const X,
     ptiMatrix ** const mats,     // mats[nmodes] as temporary space.
     ptiIndex * const mats_order,    // Correspond to the mode order of X.
     ptiIndex const mode,
     ptiIndex const impl_num);
-int ptiCudaMTTKRPSM(
-    ptiSparseTensor const * const X,
-    ptiMatrix ** const mats,     // mats[nmodes] as temporary space.
-    ptiIndex * const mats_order,    // Correspond to the mode order of X.
-    ptiIndex const mode,
-    ptiIndex const impl_num);
-int ptiCudaMTTKRPDevice(
-    const ptiIndex mode,
-    const ptiIndex nmodes,
-    const ptiNnzIndex nnz,
-    const ptiIndex rank,
-    const ptiIndex stride,
-    const ptiIndex * Xndims,
-    ptiIndex ** const Xinds,
-    const ptiValue * Xvals,
-    const ptiIndex * dev_mats_order,
-    ptiValue ** dev_mats,
-    ptiValue * dev_scratch);
-int ptiSplittedMTTKRP(
-    ptiSparseTensor const *const X,
-    ptiMatrix *mats[],
-    ptiIndex const mats_order[],
-    ptiIndex const mode,
-    ptiValueVector *scratch,
-    ptiIndex const split_count[]
-);
-
 /* Coarse GPU */
-int ptiCudaCoarseMTTKRP(
-    ptiSparseTensor const * const X,
-    ptiMatrix ** const mats,     // mats[nmodes] as temporary space.
-    ptiIndexVector const * const mats_order,    // Correspond to the mode order of X.
-    ptiIndex const mode);
-
 /**
  * Matricized tensor times Khatri-Rao product for HiCOO tensors
  */
@@ -327,11 +295,4 @@ int ptiMTTKRPKernelHiCOO(
     ptiValue * const dev_values,
     ptiIndex * const dev_mats_order,
     ptiValue ** const dev_mats);
-int ptiTTMHiCOO_MatrixTiling(
-    ptiSparseTensorHiCOO * const Y,
-    ptiSparseTensorHiCOO const * const X,
-    ptiRankMatrix * U,     // mats[nmodes] as temporary space.
-    ptiIndex const mode);
-
-
 #endif
