@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['macros_2eh_0',['macros.h',['../macros_8h.html',1,'']]],
+  ['matrices_2eh_1',['matrices.h',['../matrices_8h.html',1,'']]],
+  ['matricize_2ec_2',['matricize.c',['../matricize_8c.html',1,'']]],
+  ['matrix_2ec_3',['matrix.c',['../matrix_8c.html',1,'']]],
+  ['matrix_5fcuda_2ecu_4',['matrix_cuda.cu',['../matrix__cuda_8cu.html',1,'']]],
+  ['matrix_5fsolver_2ec_5',['matrix_solver.c',['../matrix__solver_8c.html',1,'']]],
+  ['merge_2ec_6',['merge.c',['../merge_8c.html',1,'']]],
+  ['mmio_2ec_7',['mmio.c',['../mmio_8c.html',1,'']]],
+  ['mmio_2eh_8',['mmio.h',['../mmio_8h.html',1,'']]],
+  ['mmul_2ec_9',['mmul.c',['../ssptensor_2mmul_8c.html',1,'(Global Namespace)'],['../sptensor_2mmul_8c.html',1,'(Global Namespace)'],['../spmatrix_2mmul_8c.html',1,'(Global Namespace)'],['../spmatrix_2hicoo_2mmul_8c.html',1,'(Global Namespace)'],['../spmatrix_2csr_2mmul_8c.html',1,'(Global Namespace)']]],
+  ['mmul_5fcuda_2ecu_10',['mmul_cuda.cu',['../mmul__cuda_8cu.html',1,'']]],
+  ['mmul_5fcuda_5fkernels_2ecu_11',['mmul_cuda_kernels.cu',['../mmul__cuda__kernels_8cu.html',1,'']]],
+  ['mmul_5fcuda_5fkernels_2eh_12',['mmul_cuda_kernels.h',['../mmul__cuda__kernels_8h.html',1,'']]],
+  ['mmul_5fcuda_5fonekernel_2ecu_13',['mmul_cuda_onekernel.cu',['../mmul__cuda__onekernel_8cu.html',1,'']]],
+  ['mmul_5fomp_2ec_14',['mmul_omp.c',['../mmul__omp_8c.html',1,'']]],
+  ['msort_2ec_15',['msort.c',['../msort_8c.html',1,'']]],
+  ['mttkrp_2ec_16',['mttkrp.c',['../mttkrp_8c.html',1,'(Global Namespace)'],['../hicoo_2mttkrp_8c.html',1,'(Global Namespace)']]],
+  ['mttkrp_5fcuda_2ecu_17',['mttkrp_cuda.cu',['../mttkrp__cuda_8cu.html',1,'']]],
+  ['mttkrp_5fcuda_5fkernels_2ecu_18',['mttkrp_cuda_kernels.cu',['../hicoo_2mttkrp__cuda__kernels_8cu.html',1,'(Global Namespace)'],['../mttkrp__cuda__kernels_8cu.html',1,'(Global Namespace)']]],
+  ['mttkrp_5fcuda_5fkernels_2eh_19',['mttkrp_cuda_kernels.h',['../hicoo_2mttkrp__cuda__kernels_8h.html',1,'(Global Namespace)'],['../mttkrp__cuda__kernels_8h.html',1,'(Global Namespace)']]],
+  ['mttkrp_5fcuda_5fonekernel_2ecu_20',['mttkrp_cuda_onekernel.cu',['../mttkrp__cuda__onekernel_8cu.html',1,'']]],
+  ['mttkrp_5fomp_2ec_21',['mttkrp_omp.c',['../hicoo_2mttkrp__omp_8c.html',1,'(Global Namespace)'],['../mttkrp__omp_8c.html',1,'(Global Namespace)']]]
+];
