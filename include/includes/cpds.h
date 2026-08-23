@@ -37,6 +37,13 @@ int ptiOmpCpdAls(
   const int tk,
   const int use_reduce,
   ptiKruskalTensor * ktensor);
+int ptiCudaCpdAls(
+  ptiSparseTensor const * const ptien,
+  ptiIndex const rank,
+  ptiIndex const niters,
+  double const tol,
+  int const impl_num,   // GPU MTTKRP variant: 11, 15 or 16
+  ptiKruskalTensor * ktensor);
 int ptiCpdAlsHiCOO(
   ptiSparseTensorHiCOO const * const hitsr,
   ptiIndex const rank,

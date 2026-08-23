@@ -222,6 +222,62 @@ static void gpu_elementwise(const char *path, ptiIndex R)
     ptiFreeSparseTensor(&X);
 }
 
+
+/* GPU CP-ALS: on an exactly rank-3 tensor it must converge to fit ~ 1 and
+ * agree with the CPU CP-ALS (identical deterministic initialisation). */
+static void gpu_cpd(void)
+{
+    /* same generator as test_cpd.c */
+    const char *path = "test_gpu_lowrank.tns";
+    ptiIndex const R = 3;
+    ptiIndex const dims[3] = { 6, 5, 4 };
+    uint64_t rng = 99ULL;
+    double *F[3];
+    for(int m = 0; m < 3; ++m) {
+        F[m] = (double *) malloc(dims[m] * R * sizeof(double));
+        for(ptiIndex i = 0; i < dims[m] * R; ++i)
+            F[m][i] = 0.2 + (double) pti_test_rand(&rng);
+    }
+    FILE *f = fopen(path, "w");
+    if(!f) { perror(path); ++pti_test_failures; return; }
+    fprintf(f, "3\n%u %u %u\n", dims[0], dims[1], dims[2]);
+    for(ptiIndex i = 0; i < dims[0]; ++i)
+        for(ptiIndex j = 0; j < dims[1]; ++j)
+            for(ptiIndex k = 0; k < dims[2]; ++k) {
+                double v = 0;
+                for(ptiIndex r = 0; r < R; ++r)
+                    v += F[0][i * R + r] * F[1][j * R + r] * F[2][k * R + r];
+                fprintf(f, "%u %u %u %.17g\n", i + 1, j + 1, k + 1, v);
+            }
+    fclose(f);
+    for(int m = 0; m < 3; ++m) free(F[m]);
+
+    ptiSparseTensor X;
+    if(ptiLoadSparseTensor(&X, 1, (char *) path) != 0) { ++pti_test_failures; remove(path); return; }
+
+    ptiKruskalTensor kc, kg;
+    ptiNewKruskalTensor(&kc, X.nmodes, X.ndims, R);
+    ptiNewKruskalTensor(&kg, X.nmodes, X.ndims, R);
+    CHECK(ptiCpdAls(&X, R, 500, 1e-12, &kc) == 0, "cpu cpd failed");
+    int rc = ptiCudaCpdAls(&X, R, 500, 1e-12, 15, &kg);
+    CHECK(rc == 0, "ptiCudaCpdAls failed rc=%d", rc);
+    if(rc == 0) {
+        CHECK(kg.fit > 0.999, "GPU cpd fit %g, expected > 0.999 on exactly rank-3", kg.fit);
+        CHECK(fabs(kg.fit - kc.fit) <= 5e-3, "GPU fit %g vs CPU fit %g", kg.fit, kc.fit);
+    }
+
+    /* invalid impl_num and non-3D input must be refused */
+    ptiKruskalTensor kbad;
+    ptiNewKruskalTensor(&kbad, X.nmodes, X.ndims, R);
+    CHECK(ptiCudaCpdAls(&X, R, 5, 1e-6, 7, &kbad) != 0,
+          "GPU cpd accepted unsupported impl_num 7");
+
+    ptiFreeKruskalTensor(&kc);
+    ptiFreeKruskalTensor(&kg);
+    ptiFreeSparseTensor(&X);
+    remove(path);
+}
+
 int main(int argc, char **argv)
 {
     DATA_DIR = (argc > 1) ? argv[1] : "data";
@@ -240,5 +296,6 @@ int main(int argc, char **argv)
             hicoo_gpu(p, ranks[k], 2, 4, 2);
             gpu_elementwise(p, ranks[k]);
         }
+    gpu_cpd();
     return TEST_SUMMARY();
 }

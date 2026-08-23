@@ -50,7 +50,7 @@ int main(int argc, char ** argv) {
     int cuda_dev_id = -2;
     int nthreads;
     int use_reduce = 1;
-    int impl_num = 0;
+    int impl_num = 15;
 
     if(argc < 2) {
         print_usage(argc, argv);
@@ -130,7 +130,7 @@ int main(int argc, char ** argv) {
         ptiAssert(ptiOmpCpdAls(&X, R, niters, tol, nthreads, use_reduce, &ktensor) == 0);
     } else {
          ptiCudaSetDevice(cuda_dev_id);
-         // ptiAssert(ptiCudaCpdAls(&X, R, niters, tol, &ktensor) == 0);
+         ptiAssert(ptiCudaCpdAls(&X, R, niters, tol, impl_num, &ktensor) == 0);
     } 
 
     for(int it=0; it<nloops; ++it) {
@@ -146,7 +146,7 @@ int main(int argc, char ** argv) {
             ptiAssert(ptiOmpCpdAls(&X, R, niters, tol, nthreads, use_reduce, &ktensor) == 0);
         } else {
              ptiCudaSetDevice(cuda_dev_id);
-             // ptiAssert(ptiCudaCpdAls(&X, R, niters, tol, &ktensor) == 0);
+             ptiAssert(ptiCudaCpdAls(&X, R, niters, tol, impl_num, &ktensor) == 0);
         }
     }
 
