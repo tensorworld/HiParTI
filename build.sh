@@ -12,7 +12,11 @@ echo "==========================================================================
 echo
 
 declare -a CMAKE_FLAGS
-[ -e build.config ] && CMAKE_FLAGS=("${CMAKE_FLAGS[@]}" $(<build.config))
+if [ ! -e build.config ]; then
+    echo "No build.config found; creating one from build-sample.config (edit it to change options)."
+    cp build-sample.config build.config
+fi
+CMAKE_FLAGS=("${CMAKE_FLAGS[@]}" $(<build.config))
 CMAKE_FLAGS=("${CMAKE_FLAGS[@]}" "$@")
 
 mkdir -p build

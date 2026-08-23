@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
             sscanf(optarg, "%"HIPARTI_SCN_ELEMENT_INDEX, &block_bits);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
     printf("sort: %d\n", sort);

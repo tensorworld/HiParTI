@@ -50,7 +50,7 @@ int main(int argc, char * const argv[]) {
             ptiAssert(fo != NULL);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
 

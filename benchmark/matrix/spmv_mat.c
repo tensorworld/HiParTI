@@ -71,7 +71,7 @@ int main(int argc, char * const argv[])
             sscanf(optarg, "%d", &use_reduce);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
     printf("niters: %d\n", niters);

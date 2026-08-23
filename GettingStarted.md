@@ -19,11 +19,15 @@ This intro document can help you get used to the basics of HiParTI.
 Data types
 ----------
 
-`ptiScalar`: the default real value data type. It is defined as `float` or `double` type. For some devices without 64-bit float point support or data is out-of-memory in `double` type, you might need to define `ptiScalar` as `float`.
+`ptiValue`: the default real value data type, `float` or `double` depending on
+`HIPARTI_VALUE_TYPEWIDTH` (32 by default, i.e. `float`).
 
-`ptiVector`: dense dynamic array of `ptiScalar` type scalars. It is implemented as a one-dimensional array. It uses preallocation to reduce the overhead of the append operation.
+`ptiIndex` / `ptiNnzIndex`: index types for mode coordinates and nonzero counts,
+`uint32_t` and `uint64_t` by default (`HIPARTI_INDEX_TYPEWIDTH`).
 
-`ptiSizeVector`: dense dynamic array of `size_t` type scalars. This is implemented twice to avoid templates for CUDA code.
+`ptiValueVector`: dense dynamic array of `ptiValue` scalars. It is implemented as a one-dimensional array. It uses preallocation to reduce the overhead of the append operation.
+
+`ptiIndexVector` / `ptiNnzIndexVector`: dense dynamic arrays of `ptiIndex` / `ptiNnzIndex` scalars.
 
 `ptiMatrix`: dense matrix type. It is implemented as a two-dimensional array. Column count is aligned as multiples of 8.
 
@@ -39,27 +43,74 @@ Creating objects
 
 Most data types can fit themselves into stack memory, as local variables. They will handle extra memory allocations on demand.
 
-For example, to construct an `ptiVector` and use it.
+For example, to construct a `ptiValueVector` and use it.
 
 ```c
 // Construct it
-ptiVector my_vector;
-ptiNewVector(&my_vector, 0, 0);
+ptiValueVector my_vector;
+ptiNewValueVector(&my_vector, 0, 0);
 
 // Add values to it
-ptiAppendVector(&my_vector, 42);
-ptiAppendVector(&my_vector, 31);
+ptiAppendValueVector(&my_vector, 42);
+ptiAppendValueVector(&my_vector, 31);
 
-// Copy it to another uninitialized vector
-ptiVector another_vector;
-ptiCopyVector(&another_vector, &my_vector);
+// Copy it to another uninitialized vector (last argument: number of threads)
+ptiValueVector another_vector;
+ptiCopyValueVector(&another_vector, &my_vector, 1);
 
 // Access data
-printf("%lf %lf\n", another_vector.data[0], another_vector.data[1]);
+printf("%f %f\n", another_vector.data[0], another_vector.data[1]);
 
 // Free memory
-ptiFreeVector(&my_vector);
-ptiFreeVector(&another_vector);
+ptiFreeValueVector(&my_vector);
+ptiFreeValueVector(&another_vector);
+```
+
+A complete first program
+------------------------
+
+Save as `demo.c`, then build with
+`gcc demo.c -I<HiParTI>/include -L<HiParTI>/build -lHiParTI -fopenmp -lm -o demo`
+and run as `./demo <HiParTI>/data/tensors/3d_7.tns`:
+
+```c
+#include <HiParTI.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+    if(argc < 2) { fprintf(stderr, "usage: %s tensor.tns\n", argv[0]); return 1; }
+
+    ptiSparseTensor X;
+    if(ptiLoadSparseTensor(&X, 1, argv[1]) != 0) return 1;  // 1 = file is 1-indexed
+    ptiSparseTensorStatus(&X, stdout);
+
+    // MTTKRP on mode 0 with random rank-8 factor matrices
+    ptiIndex const mode = 0, R = 8;
+    ptiIndex nmodes = X.nmodes, max_dim = 0;
+    ptiMatrix **U = malloc((nmodes + 1) * sizeof *U);
+    for(ptiIndex m = 0; m < nmodes; ++m) {
+        U[m] = malloc(sizeof **U);
+        ptiNewMatrix(U[m], X.ndims[m], R);
+        ptiRandomizeMatrix(U[m]);       // deterministic: same values every run
+        if(X.ndims[m] > max_dim) max_dim = X.ndims[m];
+    }
+    U[nmodes] = malloc(sizeof **U);     // output / scratch matrix
+    ptiNewMatrix(U[nmodes], max_dim, R);
+    ptiConstantMatrix(U[nmodes], 0);
+
+    ptiIndex order[8];                  // mode order: the target mode first
+    order[0] = mode;
+    for(ptiIndex i = 1; i < nmodes; ++i) order[i] = (mode + i) % nmodes;
+
+    if(ptiMTTKRP(&X, U, order, mode) != 0) return 1;
+    printf("MTTKRP result (first row): %f ...\n", U[nmodes]->values[0]);
+
+    for(ptiIndex m = 0; m <= nmodes; ++m) { ptiFreeMatrix(U[m]); free(U[m]); }
+    free(U);
+    ptiFreeSparseTensor(&X);
+    return 0;
+}
 ```
 
 Most functions require initialized data structures. While functions named `New` or `Copy` require uninitialized data structions. They are states in the Doxygen document on a function basis. Failing to supply data with correct initialization state may result in memory leak or program crash.

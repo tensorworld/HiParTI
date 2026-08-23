@@ -67,7 +67,7 @@ int main(int argc, char * const argv[])
             sscanf(optarg, "%d", &cuda_dev_id);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
     printf("sb: %ld\n", (long int)pow(2,sb_bits));

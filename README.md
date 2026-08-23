@@ -23,7 +23,6 @@ A Hierarchical Parallel Tensor Infrastructure (HiParTI), is to support fast esse
 * Sparse tensor-times-dense vector (SpTTV)
 * Sparse tensor-times-dense matrix (SpTTM)
 * Sparse matricized tensor times Khatri-Rao product (SpMTTKRP)
-* Sparse tensor contraction (SpTC)
 * Sparse tensor sorting
 * Sparse tensor reordering
 * Sparse tensor matricization
@@ -32,8 +31,7 @@ A Hierarchical Parallel Tensor Infrastructure (HiParTI), is to support fast esse
 
 ## Sparse tensor decompositions:
 
-* Sparse CANDECOMP/PARAFAC decomposition
-* Sparse Tucker decomposition
+* Sparse CANDECOMP/PARAFAC (CP) decomposition, on CPU (sequential and OpenMP) and GPU
 
 # Build requirements:
 
@@ -43,19 +41,46 @@ A Hierarchical Parallel Tensor Infrastructure (HiParTI), is to support fast esse
 
 - [CMake](https://cmake.org) (>v3.0)
 
-- BLAS: E.g., [OpenBLAS](http://www.openblas.net), Intel MKL, or [MAGMA](http://icl.cs.utk.edu/magma/)
+- BLAS and LAPACK. On Ubuntu/Debian: `sudo apt install libblas-dev liblapack-dev`;
+  alternatives such as [OpenBLAS](http://www.openblas.net), Intel MKL, or
+  [MAGMA](http://icl.cs.utk.edu/magma/) also work (see `build-sample.config`)
 
 
 # Build:
 
-<!-- 1. Create a file by `touch build.config' to define OpenBLAS_DIR and MAGMA_DIR -->
-1. Create a file by `cp build-sample.config build.config` to open and/or define library path (Please leave -DUSE_OPENMP=ON for now. Also please explicitly define compliers using `-DCMAKE_C_COMPILER` and `-DCMAKE_CXX_COMPILER`)
+1. Type `./build.sh` (on the first run it creates `build.config` from
+   `build-sample.config`; edit that file to change compilers or options,
+   and please leave `-DUSE_OPENMP=ON`)
 
-2. Type `./build.sh`
+2. Check `build` for the resulting library
 
-3. Check `build` for resulting library
+3. Check `build/benchmark` for example programs
 
-4. Check `build/benchmark` for example programs
+For NVIDIA GPU support, set in `build.config`:
+
+```
+-DUSE_CUDA=ON
+-DCUDA_ARCH_BIN=86        # your GPU's compute capability, e.g. 86 for RTX 30xx/A4500, 80 for A100
+```
+
+# Run the tests:
+
+```
+cd build && ctest
+```
+
+`ctest -L unit` runs only the fast unit tests; with a CUDA build, `ctest -L gpu`
+selects the GPU tests (they are skipped automatically when no device is present).
+
+# Data formats:
+
+Tensors are read from text `.tns` files (first line: number of modes; second
+line: the dimensions; then one `i j k value` entry per line, 1-indexed - see
+`data/tensors/`), and matrices from MatrixMarket `.mtx` files (see
+`data/matrices/`).  Files from the
+[TensorSuite](https://tensorworld.github.io/TensorSuite/) collection
+(`%%TensorSuite-TNS` header, optional value column, sidecar metadata) are
+detected and loaded automatically by `ptiLoadSparseTensor`.
 
 
 # Build docs:
@@ -66,21 +91,6 @@ A Hierarchical Parallel Tensor Infrastructure (HiParTI), is to support fast esse
 
 3. Type `make`
 
-
-# Build MATLAB interface:
-
-1. `cd matlab`
-
-2. export LD_LIBRARY_PATH=../build:$LD_LIBRARY_PATH
-
-3. Type `make` to build all functions into MEX library.
-
-4. matlab
-
-    1. In matlab environment, type `addpath(pwd)`
-   
-    2. Play with ParTI MATLAB inferface.
-    
 
 <br/>The algorithms and details are described in the following publications.
 # Publications
@@ -98,4 +108,4 @@ A Hierarchical Parallel Tensor Infrastructure (HiParTI), is to support fast esse
 
 # Contributors
 
-* Jiajia Li (Contact: Jiajia.Li@pnnl.gov or fruitfly1026@gmail.com)
+* Jiajia Li (Contact: jiajia.li@ncsu.edu or fruitfly1026@gmail.com)

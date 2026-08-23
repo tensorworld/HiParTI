@@ -111,7 +111,12 @@ if(USE_BLAS)
     if(${BLAS_FOUND})
       message("FOUND BLAS LIBS: " ${BLAS_LIBRARIES})
     else()
-      message(FATAL_ERROR "Could not find BLAS library. Set path in build.config.")
+      message(FATAL_ERROR "Could not find a BLAS library.\n"
+        "  On Ubuntu/Debian:  sudo apt install libblas-dev liblapack-dev\n"
+        "  On Fedora/RHEL:    sudo dnf install blas-devel lapack-devel\n"
+        "  Or point CMake at an existing one, e.g. add to build.config:\n"
+        "    -DCMAKE_LIBRARY_PATH=/path/to/dir/containing/libblas.so\n"
+        "  Or disable with -DUSE_BLAS=OFF -DUSE_LAPACK=OFF (CPD needs BLAS).")
     endif()
 endif()
 
@@ -123,7 +128,10 @@ if(USE_LAPACK)
     if(${LAPACK_FOUND})
       message("FOUND LAPACK LIBS: " ${LAPACK_LIBRARIES})
     else()
-      message(FATAL_ERROR "Could not find LAPACK library. Set path in build.config.")
+      message(FATAL_ERROR "Could not find a LAPACK library.\n"
+        "  On Ubuntu/Debian:  sudo apt install liblapack-dev\n"
+        "  On Fedora/RHEL:    sudo dnf install lapack-devel\n"
+        "  Or add to build.config: -DCMAKE_LIBRARY_PATH=/path/to/dir/containing/liblapack.so")
     endif()
     # find_library(
     #     LAPACK_LIBRARIES

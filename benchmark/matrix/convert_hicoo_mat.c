@@ -62,7 +62,7 @@ int main(int argc, char * const argv[]) {
             sscanf(optarg, "%"HIPARTI_SCN_ELEMENT_INDEX, &sk_bits);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
 

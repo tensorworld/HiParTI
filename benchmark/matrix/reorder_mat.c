@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
             sscanf(optarg, "%d", &relabel);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
     printf("relabel: %d\n", relabel);

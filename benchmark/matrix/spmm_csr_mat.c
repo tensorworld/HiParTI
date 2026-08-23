@@ -69,7 +69,7 @@ int main(int argc, char * const argv[]) {
             sscanf(optarg, "%d", &cuda_dev_id);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
     printf("B ncols: %d\n", R);
@@ -88,7 +88,7 @@ int main(int argc, char * const argv[]) {
         printf("Usage: %s\n", argv[0]);
         printf("Options: -i INPUT, --input=INPUT\n");
         printf("         -o OUTPUT, --output=OUTPUT\n");
-        printf("         -R RANK\n");
+        printf("         -r RANK\n");
         printf("         -d CUDA_DEV_ID, --cuda-dev-id=DEV_ID\n");
         printf("\n");
         return 1;

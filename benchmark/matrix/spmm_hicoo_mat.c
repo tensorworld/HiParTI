@@ -86,7 +86,7 @@ int main(int argc, char * const argv[]) {
             sscanf(optarg, "%d", &use_schedule);
             break;
         default:
-            abort();
+            exit(1);   /* getopt has already reported the unknown option */
         }
     }
     printf("B ncols: %d\n", R);
@@ -109,7 +109,7 @@ int main(int argc, char * const argv[]) {
         printf("         -o OUTPUT, --output=OUTPUT\n");
         printf("         -b BLOCKSIZE (bits), --blocksize=BLOCKSIZE (bits)\n");
         printf("         -k SUPERBLOCKSIZE (bits), --kernelsize=SUPERBLOCKSIZE (bits)\n");
-        printf("         -R RANK\n");
+        printf("         -r RANK\n");
         printf("         -d CUDA_DEV_ID, --cuda-dev-id=DEV_ID\n");
         printf("         -u use_schedule, --ur=use_schedule\n");
         printf("\n");

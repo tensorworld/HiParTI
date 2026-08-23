@@ -74,7 +74,7 @@ For CPU, sequential and multithreading:
 	Usage: ./build/benchmark/matrix/spmm_mat
 	Options: -i INPUT, --input=INPUT
 	         -o OUTPUT, --output=OUTPUT
-	         -R RANK
+	         -r RANK
 	         -d CUDA_DEV_ID, --cuda-dev-id=DEV_ID
 	         -u use_reduce, --ur=use_reduce
 
@@ -84,7 +84,7 @@ For CPU, sequential and multithreading:
 	Usage: ./build/benchmark/matrix/spmm_csr_mat
 	Options: -i INPUT, --input=INPUT
 	         -o OUTPUT, --output=OUTPUT
-	         -R RANK
+	         -r RANK
 	         -d CUDA_DEV_ID, --cuda-dev-id=DEV_ID
 
 ### HiCOO format 
@@ -95,7 +95,7 @@ For CPU, sequential and multithreading:
 	         -o OUTPUT, --output=OUTPUT
 	         -b BLOCKSIZE (bits), --blocksize=BLOCKSIZE (bits)
 	         -k SUPERBLOCKSIZE (bits), --kernelsize=SUPERBLOCKSIZE (bits)
-	         -R RANK
+	         -r RANK
 	         -d CUDA_DEV_ID, --cuda-dev-id=DEV_ID
 	         -u use_schedule, --ur=use_schedule
 
