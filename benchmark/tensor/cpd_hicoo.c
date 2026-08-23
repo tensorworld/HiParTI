@@ -62,7 +62,7 @@ int main(int argc, char ** argv) {
     // int nloops = 1; // 5
     ptiIndex niters = 1; //5; // 50
     double tol = 1e-5;
-    int impl_num = 0;
+    int impl_num = 1;
     int renumber = 0;
     int niters_renum = 3;
     /* renumber:

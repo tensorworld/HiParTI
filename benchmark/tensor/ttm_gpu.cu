@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     int cuda_dev_id = 0;
     int niters = 5;
     int impl_num = 15;
-    ptiNnzIndex smem_size = 160000;
+    ptiNnzIndex smem_size = 0;   /* 0 = pick from the device below (was hard-coded 160000, an A100 value) */
     ptiTimer timer;
     ptiNewTimer(&timer, 0);
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
             {0, 0, 0, 0}
         };
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:m:o:d:r:", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:m:o:d:r:p:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -113,14 +113,18 @@ int main(int argc, char *argv[]) {
 
     /* For warm-up caches, timing not included */
     ptiCudaSetDevice(cuda_dev_id);
-    // ptiAssert(ptiCudaSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
+    if(smem_size == 0) {
+        int smem_optin = 0, dev = (cuda_dev_id >= 0 ? cuda_dev_id : 0);
+        cudaDeviceGetAttribute(&smem_optin, cudaDevAttrMaxSharedMemoryPerBlockOptin, dev);
+        smem_size = (ptiNnzIndex) smem_optin;
+        printf("smem_size: %lu (device maximum)\n", (unsigned long) smem_size);
+    }
     ptiAssert(ptiCudaSparseTensorMulMatrixOneKernel(&Y, &X, &U, mode, impl_num, smem_size) == 0);
 
     ptiStartTimer(timer);
     for(int it=0; it<niters; ++it) {
         ptiFreeSemiSparseTensor(&Y);
         ptiCudaSetDevice(cuda_dev_id);
-        // ptiAssert(ptiCudaSparseTensorMulMatrix(&Y, &X, &U, mode) == 0);
         ptiAssert(ptiCudaSparseTensorMulMatrixOneKernel(&Y, &X, &U, mode, impl_num, smem_size) == 0);
     }
     ptiStopTimer(timer);

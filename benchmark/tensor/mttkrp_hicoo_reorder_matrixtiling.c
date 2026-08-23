@@ -51,7 +51,9 @@ static void print_usage(char ** argv) {
 int main(int argc, char ** argv) {
     printf("mttkrp_hicoo_renumber_matrixtiling: \n");
 
-    FILE *fi = NULL, *fo = NULL, *fs = NULL;
+    FILE *fo = NULL, *fs = NULL;
+
+    char const * ifname = NULL;
     ptiSparseTensor tsr;
     ptiRankMatrix ** U;
     ptiRankMatrix ** copy_U;
@@ -114,8 +116,7 @@ int main(int argc, char ** argv) {
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            ptiAssert(fi != NULL);
+            ifname = optarg;
             break;
         case 'o':
             fo = fopen(optarg, "w");
@@ -175,8 +176,7 @@ int main(int argc, char ** argv) {
         printf("niters_renum: %d\n\n", niters_renum);
 
     /* A sorting included in load tensor */
-    ptiAssert(ptiLoadSparseTensor(&tsr, 1, fi) == 0);
-    fclose(fi);
+    ptiAssert(ptiLoadSparseTensor(&tsr, 1, ifname) == 0);
     ptiSparseTensorStatus(&tsr, stdout);
     // ptiAssert(ptiDumpSparseTensor(&tsr, 0, stdout) == 0);
 

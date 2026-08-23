@@ -53,7 +53,7 @@ int main(int argc, char ** argv) {
     int cuda_dev_id = -2;
     int nthreads = 1;
     int use_reduce = 0;
-    int impl_num = 0;
+    int impl_num = 1;
     int renumber = 0;
     int niters_renum = 3;
     /* renumber:

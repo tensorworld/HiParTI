@@ -32,7 +32,7 @@ void print_usage(char ** argv) {
     printf("         -k KERNELSIZE (bits), --kernelsize=KERNELSIZE (bits)\n");
     printf("         -s sortcase, --sortcase=SORTCASE (1,2,3,4)\n");
     printf("         -p IMPL_NUM, --impl-num=IMPL_NUM\n");
-    printf("         -d CUDA_DEV_ID, --cuda-dev-id=DEV_ID\n");
+    printf("         -d CUDA_DEV_ID, --cuda-dev-id=DEV_ID (-2: sequential, -1: OpenMP; GPU not supported here, use mttkrp_gpu)\n");
     printf("         -r RANK\n");
     printf("         -t NTHREADS, --nt=NT\n");
     printf("         -u use_reduce, --ur=use_reduce\n");
@@ -100,7 +100,7 @@ int main(int argc, char ** argv) {
             printf("input file: %s\n", ifname); fflush(stdout);
             break;
         case 'o':
-            fo = fopen(optarg, "aw");
+            fo = fopen(optarg, "w");
             ptiAssert(fo != NULL);
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
@@ -141,6 +141,10 @@ int main(int argc, char ** argv) {
 
     printf("mode: %"HIPARTI_PRI_INDEX "\n", mode);
     printf("cuda_dev_id: %d\n", cuda_dev_id);
+    if(cuda_dev_id >= 0) {
+        fprintf(stderr, "Error: GPU execution is not implemented in this program. Use mttkrp_gpu for cuda_dev_id >= 0.\n");
+        return 1;
+    }
     printf("sortcase: %d\n", sortcase);
 
     /* Load a sparse tensor from file as it is */
@@ -156,8 +160,8 @@ int main(int argc, char ** argv) {
     ptiIndex max_ndims = 0;
     for(ptiIndex m=0; m<nmodes; ++m) {
       ptiAssert(ptiNewMatrix(U[m], X.ndims[m], R) == 0);
-      ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
-      // ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
+      // ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
+      ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
       if(X.ndims[m] > max_ndims)
         max_ndims = X.ndims[m];
     }
@@ -444,7 +448,6 @@ int main(int argc, char ** argv) {
 
         if(fo != NULL) {
             ptiAssert(ptiDumpMatrix(U[nmodes], fo) == 0);
-            fclose(fo);
         }
 
     } // End execute a specified mode

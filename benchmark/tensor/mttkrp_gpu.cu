@@ -52,7 +52,7 @@ int main(int argc, char ** argv) {
     int cuda_dev_id = -2;
     int niters = 5;
     int nthreads;
-    int impl_num = 0;
+    int impl_num = 15;
     int use_reduce = 1; // Need to choose from two omp parallel approaches
     int nt = 1;
     /* sortcase:
@@ -191,8 +191,8 @@ int main(int argc, char ** argv) {
     ptiIndex max_ndims = 0;
     for(ptiIndex m=0; m<nmodes; ++m) {
       ptiAssert(ptiNewMatrix(U[m], X.ndims[m], R) == 0);
-      ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
-      // ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
+      // ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
+      ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
       if(X.ndims[m] > max_ndims)
         max_ndims = X.ndims[m];
     }
@@ -259,24 +259,8 @@ int main(int argc, char ** argv) {
         }
     } else {
         ptiCudaSetDevice(cuda_dev_id);
-        // ptiAssert(ptiCudaMTTKRP(&X, U, mats_order, mode, impl_num) == 0);
         ptiAssert(ptiCudaMTTKRPOneKernel(&X, U, mats_order, mode, impl_num) == 0);
 
-        #if 0
-        switch(ncudas) {
-        case 1:
-            ptiCudaSetDevice(cuda_dev_id);
-            ptiAssert(ptiCudaMTTKRP(&X, U, &mats_order, mode) == 0);
-            break;
-        case 2:
-            ptiCudaSetDevice(cuda_dev_id);
-            ptiCudaSetDevice(cuda_dev_id+1);
-            printf("====\n");
-            ptiAssert(ptiCudaMTTKRP(csX, U, &mats_order, mode) == 0);
-            ptiAssert(ptiCudaMTTKRP(csX+1, U, &mats_order, mode) == 0);
-            break;
-        }
-       #endif
     }
 
     
@@ -302,7 +286,6 @@ int main(int argc, char ** argv) {
             }
         } else {
             ptiCudaSetDevice(cuda_dev_id);
-            // ptiAssert(ptiCudaMTTKRP(&X, U, mats_order, mode, impl_num) == 0);
             ptiAssert(ptiCudaMTTKRPOneKernel(&X, U, mats_order, mode, impl_num) == 0);
         }
     }

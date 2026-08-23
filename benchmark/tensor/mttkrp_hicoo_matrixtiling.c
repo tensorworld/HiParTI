@@ -42,7 +42,8 @@ void print_usage(int argc, char ** argv) {
 }
 
 int main(int argc, char ** argv) {
-    FILE *fi = NULL, *fo = NULL;
+    FILE *fo = NULL;
+    char const * ifname = NULL;
     ptiSparseTensor tsr;
     ptiRankMatrix ** U;
     ptiRankMatrix ** copy_U;
@@ -91,8 +92,7 @@ int main(int argc, char ** argv) {
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            ptiAssert(fi != NULL);
+            ifname = optarg;
             break;
         case 'o':
             fo = fopen(optarg, "w");
@@ -136,8 +136,7 @@ int main(int argc, char ** argv) {
     printf("cuda_dev_id: %d\n", cuda_dev_id);
 
     /* A sorting included in load tensor */
-    ptiAssert(ptiLoadSparseTensor(&tsr, 1, fi) == 0);
-    fclose(fi);
+    ptiAssert(ptiLoadSparseTensor(&tsr, 1, ifname) == 0);
     ptiSparseTensorStatus(&tsr, stdout);
     // ptiAssert(ptiDumpSparseTensor(&tsr, 0, stdout) == 0);
 

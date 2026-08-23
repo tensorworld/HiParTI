@@ -37,7 +37,8 @@ void print_usage(char ** argv) {
 }
 
 int main(int argc, char ** argv) {
-    FILE *fi = NULL, *fo = NULL;
+    FILE *fo = NULL;
+    char const * ifname = NULL;
     ptiSparseTensor X;
     /* sortcase:
      * = 0 : the same with the old COO code.
@@ -79,8 +80,7 @@ int main(int argc, char ** argv) {
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            ptiAssert(fi != NULL);
+            ifname = optarg;
             printf("input file: %s\n", optarg); fflush(stdout);
             break;
         case 'o':
@@ -115,8 +115,7 @@ int main(int argc, char ** argv) {
     printf("mode: %"HIPARTI_PRI_INDEX "\n", mode);
 
     /* Load a sparse tensor from file as it is */
-    ptiAssert(ptiLoadSparseTensor(&X, 1, fi) == 0);
-    fclose(fi);
+    ptiAssert(ptiLoadSparseTensor(&X, 1, ifname) == 0);
     ptiSparseTensorStatus(&X, stdout);
     // ptiAssert(ptiDumpSparseTensor(&X, 0, stdout) == 0);
 

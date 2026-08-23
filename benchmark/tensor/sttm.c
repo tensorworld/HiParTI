@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
             printf("input file: %s\n", optarg); fflush(stdout);
             break;
         case 'o':
-            fo = fopen(optarg, "aw");
+            fo = fopen(optarg, "w");
             ptiAssert(fo != NULL);
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
@@ -100,9 +100,10 @@ int main(int argc, char *argv[]) {
     ptiSparseTensorStatus(&spX, stdout);
     // ptiAssert(ptiDumpSparseTensor(&X, 0, stdout) == 0);
     ptiAssert(ptiSparseTensorToSemiSparseTensor(&X, &spX, mode) == 0);
+    ptiIndex const mode_dim = spX.ndims[mode];
     ptiFreeSparseTensor(&spX);
 
-    ptiAssert(ptiNewMatrix(&U, spX.ndims[mode], R) == 0);
+    ptiAssert(ptiNewMatrix(&U, mode_dim, R) == 0);
     ptiAssert(ptiConstantMatrix(&U, 1) == 0);
     // ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
     ptiDumpMatrix(&U, stdout); fflush(stdout);

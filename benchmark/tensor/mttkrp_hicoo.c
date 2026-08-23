@@ -41,7 +41,8 @@ void print_usage(int argc, char ** argv) {
 }
 
 int main(int argc, char ** argv) {
-    FILE *fi = NULL, *fo = NULL;
+    FILE *fo = NULL;
+    char const * ifname = NULL;
     ptiSparseTensor tsr;
     ptiMatrix ** U;
     ptiSparseTensorHiCOO hitsr;
@@ -89,8 +90,7 @@ int main(int argc, char ** argv) {
         }
         switch(c) {
         case 'i':
-            fi = fopen(optarg, "r");
-            ptiAssert(fi != NULL);
+            ifname = optarg;
             break;
         case 'o':
             fo = fopen(optarg, "w");
@@ -132,9 +132,8 @@ int main(int argc, char ** argv) {
     }
 
 
-    ptiAssert(ptiLoadSparseTensor(&tsr, 1, fi) == 0);
+    ptiAssert(ptiLoadSparseTensor(&tsr, 1, ifname) == 0);
     // ptiSparseTensorSortIndex(&tsr, 1);
-    fclose(fi);
     ptiSparseTensorStatus(&tsr, stdout);
     // ptiAssert(ptiDumpSparseTensor(&tsr, 0, stdout) == 0);
 
@@ -161,8 +160,8 @@ int main(int argc, char ** argv) {
     ptiIndex max_ndims = 0;
     for(ptiIndex m=0; m<nmodes; ++m) {
       ptiAssert(ptiNewMatrix(U[m], hitsr.ndims[m], R) == 0);
-      ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
-      // ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
+      // ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
+      ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
       if(hitsr.ndims[m] > max_ndims)
         max_ndims = hitsr.ndims[m];
       // ptiAssert(ptiDumpMatrix(U[m], stdout) == 0);

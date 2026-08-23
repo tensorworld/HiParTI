@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
             printf("Input file: %s\n", ifname); fflush(stdout);
             break;
         case 'o':
-            fo = fopen(optarg, "aw");
+            fo = fopen(optarg, "w");
             ptiAssert(fo != NULL);
             printf("output file: %s\n", optarg); fflush(stdout);
             break;

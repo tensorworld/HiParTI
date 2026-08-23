@@ -54,7 +54,7 @@ int main(int argc, char ** argv) {
     int cuda_dev_id = -2;
     int niters = 5;
     int nthreads;
-    int impl_num = 0;
+    int impl_num = 1;
     int renumber = 0;
     int niters_renum = 3;
     /* renumber:
@@ -113,7 +113,7 @@ int main(int argc, char ** argv) {
             printf("input file: %s\n", optarg); fflush(stdout);
             break;
         case 'o':
-            fo = fopen(optarg, "aw");
+            fo = fopen(optarg, "w");
             ptiAssert(fo != NULL);
             printf("output file: %s\n", optarg); fflush(stdout);
             break;
@@ -231,8 +231,8 @@ int main(int argc, char ** argv) {
     ptiIndex max_ndims = 0;
     for(ptiIndex m=0; m<nmodes; ++m) {
       ptiAssert(ptiNewMatrix(U[m], X.ndims[m], R) == 0);
-      ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
-      // ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
+      // ptiAssert(ptiConstantMatrix(U[m], 1) == 0);
+      ptiAssert(ptiRandomizeMatrix(U[m]) == 0);
       if(X.ndims[m] > max_ndims)
         max_ndims = X.ndims[m];
     }
